@@ -1,0 +1,3640 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+  <title>Credit & Debt Ledger</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    /* =====================================================
+   BASIC PAGE
+===================================================== */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: #07111f;
+    }
+
+
+    /* =====================================================
+   MOVING WATER BACKGROUND
+===================================================== */
+
+    #waterBackground {
+      position: fixed;
+      inset: 0;
+      z-index: -10;
+      overflow: hidden;
+
+      background:
+        radial-gradient(circle at 20% 30%,
+          rgba(9, 9, 113, 0.973),
+          transparent 35%),
+        radial-gradient(circle at 80% 20%,
+          rgba(68, 68, 247, 0.4),
+          transparent 35%),
+        radial-gradient(circle at 50% 80%,
+          rgba(26, 24, 71, 0.35),
+          transparent 40%),
+        #303652;
+    }
+
+
+    /* Liquid blobs */
+
+    .waterBlob {
+      position: absolute;
+
+      width: 55vw;
+      height: 55vw;
+
+      max-width: 750px;
+      max-height: 750px;
+
+      border-radius:
+        40% 60% 65% 35% / 45% 40% 60% 55%;
+
+      filter: blur(45px);
+
+      opacity: .55;
+
+      animation:
+        waterMove 12s ease-in-out infinite alternate;
+    }
+
+
+    .waterBlob:nth-child(1) {
+
+      background:
+        radial-gradient(circle,
+          #0a0770,
+          #040c5f 45%,
+          transparent 70%);
+
+      left: -15%;
+      top: -15%;
+    }
+
+
+    .waterBlob:nth-child(2) {
+
+      background:
+        radial-gradient(circle,
+          #041671,
+          #08056a 45%,
+          transparent 70%);
+
+      right: -15%;
+      top: 5%;
+
+      animation-delay: -4s;
+    }
+
+
+    .waterBlob:nth-child(3) {
+
+      background:
+        radial-gradient(circle,
+          #02033b,
+          #06055c 45%,
+          transparent 70%);
+
+      left: 25%;
+      bottom: -30%;
+
+      animation-delay: -8s;
+    }
+
+
+    /* Water wave pattern */
+
+    #waterWave {
+
+      position: absolute;
+
+      inset: -20%;
+
+      background:
+        repeating-radial-gradient(ellipse at center,
+          transparent 0px,
+          transparent 80px,
+          rgba(255, 255, 255, .035) 100px,
+          transparent 120px);
+
+      mix-blend-mode: screen;
+
+      animation:
+        waveMove 18s linear infinite;
+    }
+
+
+    /* Cursor water glow */
+
+    #mouseGlow {
+
+      position: absolute;
+
+      width: 320px;
+      height: 320px;
+
+      border-radius: 50%;
+
+      pointer-events: none;
+
+      background:
+        radial-gradient(circle,
+          rgba(237, 232, 232, 0.942) 0%,
+          rgba(205, 211, 212, 0.25) 20%,
+          rgba(232, 236, 238, 0.18) 45%,
+          transparent 70%);
+
+      filter: blur(25px);
+
+      transform:
+        translate(-50%, -50%);
+
+      transition:
+        width .25s ease,
+        height .25s ease;
+    }
+
+
+    /* Dark transparent water layer */
+
+    #waterShade {
+
+      position: absolute;
+
+      inset: 0;
+
+      background:
+        linear-gradient(120deg,
+          rgba(0, 0, 0, .18),
+          rgba(0, 0, 0, .05),
+          rgba(0, 0, 0, .22));
+
+      pointer-events: none;
+    }
+
+
+    /* Water animations */
+
+    @keyframes waterMove {
+
+      0% {
+        transform:
+          translate3d(0, 0, 0) rotate(0deg) scale(1);
+      }
+
+      30% {
+        transform:
+          translate3d(10vw, 5vh, 0) rotate(20deg) scale(1.1);
+      }
+
+      60% {
+        transform:
+          translate3d(-5vw, 12vh, 0) rotate(45deg) scale(.95);
+      }
+
+      100% {
+        transform:
+          translate3d(8vw, -8vh, 0) rotate(80deg) scale(1.15);
+      }
+    }
+
+
+    @keyframes waveMove {
+
+      0% {
+        transform:
+          rotate(0deg) scale(1);
+      }
+
+      50% {
+        transform:
+          rotate(180deg) scale(1.15);
+      }
+
+      100% {
+        transform:
+          rotate(360deg) scale(1);
+      }
+    }
+
+
+    /* =====================================================
+   APPLICATION
+===================================================== */
+
+    .card {
+
+      background: rgba(139, 148, 232, 0.94);
+
+      border-radius: 18px;
+
+      box-shadow:
+        0 8px 25px rgba(0, 0, 0, .20);
+
+      backdrop-filter: blur(8px);
+    }
+
+
+    .profile {
+
+      background: rgba(99, 148, 233, 0.96);
+
+      border: 2px solid #e5e7eb;
+
+      border-radius: 14px;
+
+      padding: 18px;
+
+      cursor: pointer;
+
+      transition:
+        transform .2s,
+        box-shadow .2s;
+    }
+
+
+    .profile:hover {
+
+      transform:
+        translateY(-3px);
+
+      box-shadow:
+        0 10px 25px rgba(0, 0, 0, .15);
+    }
+
+
+    .box {
+
+      border: 2px solid #e5e7eb;
+
+      border-radius: 12px;
+
+      padding: 14px;
+
+      background: white;
+    }
+
+
+    .modal {
+
+      position: fixed;
+
+      inset: 0;
+
+      background:
+        rgba(0, 0, 0, .6);
+
+      display: none;
+
+      align-items: center;
+
+      justify-content: center;
+
+      padding: 15px;
+
+      z-index: 1000;
+
+      overflow-y: auto;
+    }
+
+
+    .modal.show {
+
+      display: flex;
+    }
+
+
+    .modal-content {
+
+      width: 100%;
+
+      max-width: 700px;
+
+      max-height: 92vh;
+
+      overflow-y: auto;
+
+      background: white;
+
+      border-radius: 16px;
+
+      padding: 22px;
+    }
+
+
+    input,
+    textarea {
+
+      width: 100%;
+
+      padding: 10px;
+
+      border: 1px solid #d1d5db;
+
+      border-radius: 8px;
+
+      margin-top: 5px;
+    }
+
+
+    textarea {
+
+      min-height: 100px;
+    }
+
+
+    .completed {
+
+      color: #16a34a;
+
+      font-weight: bold;
+    }
+
+
+    .remaining {
+
+      color: #dc2626;
+
+      font-weight: bold;
+    }
+
+
+    .partial {
+
+      color: #ea580c;
+
+      font-weight: bold;
+    }
+
+
+    .item {
+
+      border: 2px solid #e5e7eb;
+
+      border-radius: 12px;
+
+      padding: 15px;
+
+      background: #fafafa;
+    }
+
+
+    /* Keep application above water */
+
+    header,
+    main,
+    .card,
+    .modal {
+
+      position: relative;
+
+      z-index: 1;
+    }
+  </style>
+</head>
+
+
+<body>
+
+
+  <!-- =====================================================
+     WATER BACKGROUND
+===================================================== -->
+
+  <div id="waterBackground">
+
+    <div class="waterBlob"></div>
+
+    <div class="waterBlob"></div>
+
+    <div class="waterBlob"></div>
+
+    <div id="waterWave"></div>
+
+    <div id="mouseGlow"></div>
+
+    <div id="waterShade"></div>
+
+  </div>
+
+
+  <!-- =====================================================
+     HEADER
+===================================================== -->
+
+  <header class="p-4 flex flex-wrap justify-between items-center">
+
+    <h1 class="text-3xl font-bold text-white">
+      Credit & Debt Ledger
+    </h1>
+
+    <div class="flex gap-2">
+
+      <button id="headerBorrower" class="bg-white text-blue-700 px-4 py-2 rounded-lg">
+
+        + Borrower
+
+      </button>
+
+      <button id="headerOwner" class="bg-white text-purple-700 px-4 py-2 rounded-lg">
+
+        + Owner
+
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- =====================================================
+     MAIN
+===================================================== -->
+
+  <main class="max-w-7xl mx-auto px-4 pb-10 space-y-8">
+
+
+    <!-- =====================================================
+     BORROWERS
+===================================================== -->
+
+    <section class="card p-5">
+
+      <div class="flex justify-between items-center mb-5">
+
+        <div>
+
+          <h2 class="text-2xl font-bold text-blue-600">
+            Borrowers
+          </h2>
+
+          <p class="text-gray-500">
+            People who have taken money from you
+          </p>
+
+        </div>
+
+
+        <button id="addBorrower" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+
+          + Add Borrower
+
+        </button>
+
+      </div>
+
+
+      <div id="borrowerGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      </div>
+
+    </section>
+
+
+    <!-- =====================================================
+     MY DEBT
+===================================================== -->
+
+    <section class="card p-5">
+
+      <div class="flex justify-between items-center mb-5">
+
+        <div>
+
+          <h2 class="text-2xl font-bold text-purple-600">
+            My Debt
+          </h2>
+
+          <p class="text-gray-500">
+            Owners / suppliers whom you have to pay
+          </p>
+
+        </div>
+
+
+        <button id="addOwner" class="bg-purple-600 text-white px-4 py-2 rounded-lg">
+
+          + Add Owner
+
+        </button>
+
+      </div>
+
+
+      <div id="ownerGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =====================================================
+     BORROWER FORM
+===================================================== -->
+
+  <div id="borrowerModal" class="modal">
+
+    <div class="modal-content">
+
+      <h2 class="text-xl font-bold mb-4">
+        Add Borrower
+      </h2>
+
+
+      <form id="borrowerForm">
+
+        <label>Name</label>
+
+        <input id="borrowerName" required>
+
+
+        <label class="block mt-3">
+          Phone
+        </label>
+
+        <input id="borrowerPhone">
+
+
+        <label class="block mt-3">
+          Address
+        </label>
+
+        <textarea id="borrowerAddress">
+</textarea>
+
+
+        <label class="block mt-3">
+          Amount Taken
+        </label>
+
+        <input id="borrowerAmount" type="number" min="0" required>
+
+
+        <label class="block mt-3">
+          Date
+        </label>
+
+        <input id="borrowerDate" type="date" required>
+
+
+        <div class="flex justify-end gap-2 mt-5">
+
+          <button type="button" id="cancelBorrower" class="bg-gray-200 px-4 py-2 rounded-lg">
+
+            Cancel
+
+          </button>
+
+
+          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+
+            Save
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+     BORROWER PROFILE
+===================================================== -->
+
+  <div id="borrowerProfile" class="modal">
+
+    <div class="modal-content">
+
+      <div class="flex justify-between">
+
+        <div>
+
+          <h2 id="borrowerNameDisplay" class="text-2xl font-bold">
+          </h2>
+
+          <p id="borrowerStatus" class="font-bold">
+          </p>
+
+        </div>
+
+
+        <button id="closeBorrower" class="text-xl">
+
+          ✕
+
+        </button>
+
+      </div>
+
+
+      <div class="grid sm:grid-cols-2 gap-3 mt-5">
+
+
+        <div class="box">
+
+          <b>Phone</b>
+
+          <p id="borrowerPhoneDisplay"></p>
+
+        </div>
+
+
+        <div class="box">
+
+          <b>Address</b>
+
+          <p id="borrowerAddressDisplay"></p>
+
+        </div>
+
+
+        <div class="box">
+
+          <b>Total Taken</b>
+
+          <p id="borrowerTotal"></p>
+
+        </div>
+
+
+        <div class="box">
+
+          <b>Total Returned</b>
+
+          <p id="borrowerPaidTotal"></p>
+
+        </div>
+
+
+        <div class="box">
+
+          <b>Remaining</b>
+
+          <p id="borrowerRemaining"></p>
+
+        </div>
+
+
+      </div>
+
+
+      <h3 class="text-xl font-bold mt-7 mb-3">
+        Amount History
+      </h3>
+
+
+      <div id="borrowerHistory" class="space-y-3">
+      </div>
+
+
+      <div class="flex flex-wrap gap-2 mt-6">
+
+        <button id="borrowerAdd" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+
+          + Add
+
+        </button>
+
+
+        <button id="borrowerPay" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+
+          Paid
+
+        </button>
+
+      </div>
+
+
+      <p id="borrowerExtra" class="font-bold mt-5">
+      </p>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+     BORROWER ADD
+===================================================== -->
+
+  <div id="borrowerAddModal" class="modal">
+
+    <div class="modal-content">
+
+      <h2 class="text-xl font-bold mb-4">
+        Add Amount
+      </h2>
+
+
+      <form id="borrowerAddForm">
+
+        <label>Amount</label>
+
+        <input id="newBorrowAmount" type="number" min="0" required>
+
+
+        <label class="block mt-3">
+          Date
+        </label>
+
+        <input id="newBorrowDate" type="date" required>
+
+
+        <div class="flex justify-end gap-2 mt-5">
+
+          <button type="button" id="cancelBorrowerAdd" class="bg-gray-200 px-4 py-2 rounded-lg">
+
+            Cancel
+
+          </button>
+
+
+          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+
+            Save
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+     BORROWER PAYMENT
+===================================================== -->
+
+  <div id="borrowerPayModal" class="modal">
+
+    <div class="modal-content">
+
+      <h2 class="text-xl font-bold mb-4">
+        Return Money
+      </h2>
+
+
+      <form id="borrowerPayForm">
+
+        <label>
+          How much money did he return?
+        </label>
+
+        <input id="borrowerReturnAmount" type="number" min="0" required>
+
+
+        <label class="block mt-3">
+          Paid Date
+        </label>
+
+        <input id="borrowerReturnDate" type="date" required>
+
+
+        <div class="flex justify-end gap-2 mt-5">
+
+          <button type="button" id="cancelBorrowerPay" class="bg-gray-200 px-4 py-2 rounded-lg">
+
+            Cancel
+
+          </button>
+
+
+          <button class="bg-green-600 text-white px-4 py-2 rounded-lg">
+
+            Save Payment
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+     OWNER FORM
+===================================================== -->
+
+  <div id="ownerModal" class="modal">
+
+    <div class="modal-content">
+
+      <h2 class="text-xl font-bold mb-4">
+        Add Owner / Supplier
+      </h2>
+
+
+      <form id="ownerForm">
+
+        <label>
+          Owner Name
+        </label>
+
+        <input id="ownerName" required>
+
+
+        <label class="block mt-3">
+          Phone
+        </label>
+
+        <input id="ownerPhone">
+
+
+        <label class="block mt-3">
+          Address
+        </label>
+
+        <textarea id="ownerAddress">
+</textarea>
+
+
+        <label class="block mt-3">
+          Product They Supply
+        </label>
+
+        <textarea id="ownerProducts">
+</textarea>
+
+
+        <div class="flex justify-end gap-2 mt-5">
+
+          <button type="button" id="cancelOwner" class="bg-gray-200 px-4 py-2 rounded-lg">
+
+            Cancel
+
+          </button>
+
+
+          <button class="bg-purple-600 text-white px-4 py-2 rounded-lg">
+
+            Save
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+     OWNER PROFILE
+===================================================== -->
+
+  <div id="ownerProfile" class="modal">
+
+    <div class="modal-content">
+
+      <div class="flex justify-between">
+
+        <div>
+
+          <h2 id="ownerNameDisplay" class="text-2xl font-bold">
+          </h2>
+
+
+          <p id="ownerDebtDisplay" class="text-xl font-bold text-purple-600">
+          </p>
+
+        </div>
+
+
+        <button id="closeOwner" class="text-xl">
+
+          ✕
+
+        </button>
+
+      </div>
+
+
+      <div class="grid sm:grid-cols-2 gap-3 mt-5">
+
+
+        <div class="box">
+
+          <b>Phone</b>
+
+          <p id="ownerPhoneDisplay"></p>
+
+        </div>
+
+
+        <div class="box">
+
+          <b>Address</b>
+
+          <p id="ownerAddressDisplay"></p>
+
+        </div>
+
+
+        <div class="box">
+
+          <b>Products</b>
+
+          <p id="ownerProductsDisplay"></p>
+
+        </div>
+
+
+        <div class="box">
+
+          <b>Total Bills</b>
+
+          <p id="ownerBillsTotal"></p>
+
+        </div>
+
+
+        <div class="box">
+
+          <b>Total Paid</b>
+
+          <p id="ownerPaidTotal"></p>
+
+        </div>
+
+      </div>
+
+
+      <h3 class="text-xl font-bold mt-7 mb-3">
+        Bills
+      </h3>
+
+
+      <div id="ownerBills" class="space-y-3">
+      </div>
+
+
+      <h3 class="text-xl font-bold mt-7 mb-3">
+        Payment History
+      </h3>
+
+
+      <div id="ownerPayments" class="space-y-3">
+      </div>
+
+
+      <div class="flex flex-wrap gap-2 mt-6">
+
+        <button id="addBill" class="bg-purple-600 text-white px-4 py-2 rounded-lg">
+
+          + Add Bill
+
+        </button>
+
+
+        <button id="ownerPay" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+
+          Pay
+
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+     ADD BILL
+===================================================== -->
+
+  <div id="billModal" class="modal">
+
+    <div class="modal-content">
+
+      <h2 class="text-xl font-bold">
+        Add Bill
+      </h2>
+
+
+      <p class="text-gray-500 mb-5">
+        Upload PDF OR Photo OR enter Text.
+      </p>
+
+
+      <form id="billForm">
+
+        <label class="font-bold">
+          PDF
+        </label>
+
+        <input id="pdfFile" type="file" accept="application/pdf,.pdf">
+
+
+        <label class="font-bold block mt-4">
+          Photo
+        </label>
+
+        <input id="photoFile" type="file" accept="image/*">
+
+
+        <label class="font-bold block mt-4">
+          Text
+        </label>
+
+        <textarea id="billText" placeholder="Enter bill text here if you don't have a PDF/photo">
+</textarea>
+
+
+        <p id="readerStatus" class="text-blue-600 text-sm mt-3">
+        </p>
+
+
+        <hr class="my-5">
+
+
+        <label>
+          Owner Name
+        </label>
+
+        <input id="billOwnerName">
+
+
+        <label class="block mt-3">
+          Amount YOU HAVE TO PAY
+        </label>
+
+        <input id="billPayableAmount" type="number" min="0" required>
+
+
+        <label class="block mt-3">
+          Bill Date
+        </label>
+
+        <input id="billDate" type="date" required>
+
+
+        <div class="flex justify-end gap-2 mt-6">
+
+          <button type="button" id="cancelBill" class="bg-gray-200 px-5 py-2 rounded-lg">
+
+            Cancel
+
+          </button>
+
+
+          <button class="bg-purple-600 text-white px-5 py-2 rounded-lg">
+
+            Save
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+     OWNER PAYMENT
+===================================================== -->
+
+  <div id="ownerPayModal" class="modal">
+
+    <div class="modal-content">
+
+      <h2 class="text-xl font-bold mb-4">
+        Pay Owner
+      </h2>
+
+
+      <form id="ownerPayForm">
+
+        <label>
+          Amount Paid
+        </label>
+
+        <input id="ownerPaymentAmount" type="number" min="0" required>
+
+
+        <label class="block mt-3">
+          Paid Date
+        </label>
+
+        <input id="ownerPaymentDate" type="date" required>
+
+
+        <div class="flex justify-end gap-2 mt-5">
+
+          <button type="button" id="cancelOwnerPay" class="bg-gray-200 px-4 py-2 rounded-lg">
+
+            Cancel
+
+          </button>
+
+
+          <button class="bg-green-600 text-white px-4 py-2 rounded-lg">
+
+            Save Payment
+
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <!-- =====================================================
+     BILL VIEWER
+===================================================== -->
+
+  <div id="viewerModal" class="modal">
+
+    <div class="modal-content" style="max-width:1000px;height:92vh">
+
+
+      <div class="flex justify-between mb-3">
+
+        <h2 id="viewerTitle" class="text-xl font-bold">
+
+          Bill
+
+        </h2>
+
+
+        <button id="closeViewer">
+          ✕
+
+        </button>
+
+      </div>
+
+
+      <div id="viewer" style="height:calc(100% - 45px);overflow:auto">
+      </div>
+
+
+    </div>
+  </div>
+
+
+  <script>
+
+    /* =====================================================
+       WATER / CURSOR EFFECT
+    ===================================================== */
+
+    const mouseGlow =
+      document.getElementById("mouseGlow");
+
+
+    let mouseX =
+      window.innerWidth / 2;
+
+    let mouseY =
+      window.innerHeight / 2;
+
+    let currentX = mouseX;
+    let currentY = mouseY;
+
+
+    document.addEventListener(
+      "mousemove",
+      function (event) {
+
+        mouseX = event.clientX;
+        mouseY = event.clientY;
+
+      }
+    );
+
+
+    function animateWaterCursor() {
+
+      currentX +=
+        (mouseX - currentX) * 0.08;
+
+      currentY +=
+        (mouseY - currentY) * 0.08;
+
+
+      mouseGlow.style.left =
+        currentX + "px";
+
+      mouseGlow.style.top =
+        currentY + "px";
+
+
+      requestAnimationFrame(
+        animateWaterCursor
+      );
+    }
+
+
+    animateWaterCursor();
+
+
+    let lastMouseX = mouseX;
+    let lastMouseY = mouseY;
+
+
+    document.addEventListener(
+      "mousemove",
+      function () {
+
+        const speed =
+          Math.sqrt(
+            Math.pow(
+              mouseX - lastMouseX,
+              2
+            ) +
+            Math.pow(
+              mouseY - lastMouseY,
+              2
+            )
+          );
+
+
+        if (speed > 20) {
+
+          mouseGlow.style.width =
+            "430px";
+
+          mouseGlow.style.height =
+            "430px";
+
+        } else {
+
+          mouseGlow.style.width =
+            "320px";
+
+          mouseGlow.style.height =
+            "320px";
+
+        }
+
+
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
+
+      }
+    );
+
+
+    /* =====================================================
+       STORAGE
+    ===================================================== */
+
+    const BORROWERS =
+      "borrowers_final_v3";
+
+    const OWNERS =
+      "owners_final_v3";
+
+
+    let currentBorrower = null;
+    let currentOwner = null;
+
+
+    function $(id) {
+      return document.getElementById(id);
+    }
+
+
+    function newId() {
+
+      return Date.now() + "_" +
+        Math.random()
+          .toString(36)
+          .substring(2);
+    }
+
+
+    function today() {
+
+      return new Date()
+        .toISOString()
+        .split("T")[0];
+    }
+
+
+    function money(n) {
+
+      return Number(n || 0)
+        .toLocaleString(
+          "en-IN",
+          {
+            style: "currency",
+            currency: "INR"
+          }
+        );
+    }
+
+
+    function dateText(d) {
+
+      if (!d) return "—";
+
+      return new Date(
+        d + "T00:00:00"
+      ).toLocaleDateString("en-IN");
+    }
+
+
+    function openModal(x) {
+
+      x.classList.add("show");
+    }
+
+
+    function closeModal(x) {
+
+      x.classList.remove("show");
+    }
+
+
+    function getBorrowers() {
+
+      return JSON.parse(
+        localStorage.getItem(
+          BORROWERS
+        ) || "[]"
+      );
+    }
+
+
+    function saveBorrowers(x) {
+
+      localStorage.setItem(
+        BORROWERS,
+        JSON.stringify(x)
+      );
+    }
+
+
+    function getOwners() {
+
+      return JSON.parse(
+        localStorage.getItem(
+          OWNERS
+        ) || "[]"
+      );
+    }
+
+
+    function saveOwners(x) {
+
+      localStorage.setItem(
+        OWNERS,
+        JSON.stringify(x)
+      );
+    }
+
+
+    /* =====================================================
+       BORROWER CALCULATION
+    ===================================================== */
+
+    function borrowerTotals(b) {
+
+      let total = 0;
+      let paid = 0;
+
+      b.records.forEach(r => {
+
+        total +=
+          Number(r.amount || 0);
+
+        paid +=
+          Number(r.paid || 0);
+
+      });
+
+
+      return {
+
+        total,
+
+        paid,
+
+        remaining:
+          Math.max(
+            0,
+            total - paid
+          )
+
+      };
+    }
+
+
+    /* =====================================================
+       OWNER CALCULATION
+    ===================================================== */
+
+    function ownerTotals(o) {
+
+      let total = 0;
+      let paid = 0;
+
+      o.bills.forEach(b => {
+
+        total +=
+          Number(b.amount || 0);
+
+        paid +=
+          Number(b.paid || 0);
+
+      });
+
+
+      return {
+
+        total,
+
+        paid,
+
+        remaining:
+          Math.max(
+            0,
+            total - paid
+          )
+
+      };
+    }
+
+
+    /* =====================================================
+       BORROWER DISPLAY
+    ===================================================== */
+
+    function renderBorrowers() {
+
+      const grid =
+        $("borrowerGrid");
+
+      const data =
+        getBorrowers();
+
+
+      grid.innerHTML = "";
+
+
+      if (!data.length) {
+
+        grid.innerHTML =
+          `<p class="text-gray-500">
+            No borrowers added.
+        </p>`;
+
+        return;
+      }
+
+
+      data.forEach(b => {
+
+        const t =
+          borrowerTotals(b);
+
+
+        const div =
+          document.createElement("div");
+
+
+        div.className = "profile";
+
+
+        div.innerHTML = `
+
+            <h3 class="text-lg font-bold">
+                ${b.name}
+            </h3>
+
+            <p class="${t.remaining === 0
+            ? "completed"
+            : "remaining"
+          }">
+
+                ${t.remaining === 0
+            ? "✓ Completed"
+            : money(t.remaining)
+          }
+
+            </p>
+        `;
+
+
+        div.onclick = () => {
+
+          currentBorrower = b.id;
+
+          showBorrower();
+
+        };
+
+
+        grid.appendChild(div);
+
+      });
+    }
+
+
+    /* =====================================================
+       BORROWER FORM
+    ===================================================== */
+
+    function openBorrowerForm() {
+
+      $("borrowerForm").reset();
+
+      $("borrowerDate").value = today();
+
+      openModal(
+        $("borrowerModal")
+      );
+    }
+
+
+    $("addBorrower").onclick =
+      openBorrowerForm;
+
+
+    $("headerBorrower").onclick =
+      openBorrowerForm;
+
+
+    $("cancelBorrower").onclick = () => {
+
+      closeModal(
+        $("borrowerModal")
+      );
+
+    };
+
+
+    $("borrowerForm").onsubmit =
+      function (e) {
+
+        e.preventDefault();
+
+
+        const data =
+          getBorrowers();
+
+
+        data.push({
+
+          id: newId(),
+
+          name:
+            $("borrowerName")
+              .value.trim(),
+
+          phone:
+            $("borrowerPhone")
+              .value.trim(),
+
+          address:
+            $("borrowerAddress")
+              .value.trim(),
+
+          records: [{
+
+            id: newId(),
+
+            amount:
+              Number(
+                $("borrowerAmount")
+                  .value
+              ),
+
+            date:
+              $("borrowerDate")
+                .value,
+
+            paid: 0,
+
+            paidDate: null
+
+          }]
+
+        });
+
+
+        saveBorrowers(data);
+
+
+        closeModal(
+          $("borrowerModal")
+        );
+
+
+        renderBorrowers();
+
+      };
+
+
+    /* =====================================================
+       BORROWER PROFILE
+    ===================================================== */
+
+    function showBorrower() {
+
+      const b =
+        getBorrowers().find(
+          x => x.id === currentBorrower
+        );
+
+
+      if (!b) return;
+
+
+      const t =
+        borrowerTotals(b);
+
+
+      $("borrowerNameDisplay")
+        .textContent = b.name;
+
+
+      $("borrowerPhoneDisplay")
+        .textContent =
+        b.phone || "—";
+
+
+      $("borrowerAddressDisplay")
+        .textContent =
+        b.address || "—";
+
+
+      $("borrowerTotal")
+        .textContent =
+        money(t.total);
+
+
+      $("borrowerPaidTotal")
+        .textContent =
+        money(t.paid);
+
+
+      $("borrowerRemaining")
+        .textContent =
+        money(t.remaining);
+
+
+      $("borrowerStatus")
+        .textContent =
+        t.remaining === 0
+          ? "✓ Completed"
+          : money(t.remaining) + " Remaining";
+
+
+      $("borrowerStatus")
+        .className =
+        t.remaining === 0
+          ? "completed"
+          : "remaining";
+
+
+      const history =
+        $("borrowerHistory");
+
+
+      history.innerHTML = "";
+
+
+      b.records.forEach(r => {
+
+        const remaining =
+          Math.max(
+            0,
+            Number(r.amount) -
+            Number(r.paid || 0)
+          );
+
+
+        const div =
+          document.createElement("div");
+
+
+        div.className = "item";
+
+
+        div.innerHTML = `
+
+            <b>
+                ${money(r.amount)}
+            </b>
+
+            <p>
+                Taken Date:
+                ${dateText(r.date)}
+            </p>
+
+            <p>
+                Returned:
+                ${money(r.paid)}
+            </p>
+
+            ${r.paidDate
+            ?
+            `<p class="text-green-600">
+                    Paid Date:
+                    ${dateText(r.paidDate)}
+                </p>`
+            : ""
+          }
+
+            <p class="${remaining === 0
+            ? "completed"
+            : "remaining"
+          }">
+
+                ${remaining === 0
+            ? "✓ Completed"
+            : money(remaining) + " Remaining"
+          }
+
+            </p>
+        `;
+
+
+        history.appendChild(div);
+
+      });
+
+
+      $("borrowerExtra")
+        .textContent =
+        t.remaining === 0
+          ? "✓ Completed"
+          : "Remaining amount: " +
+          money(t.remaining);
+
+
+      $("borrowerExtra")
+        .className =
+        t.remaining === 0
+          ? "completed font-bold mt-5"
+          : "remaining font-bold mt-5";
+
+
+      if (b.shopCredit) {
+
+        $("borrowerExtra")
+          .textContent =
+          "✓ Completed — He can borrow " +
+          money(b.shopCredit) +
+          " amount of product in your shop.";
+
+        $("borrowerExtra")
+          .className =
+          "completed font-bold mt-5";
+      }
+
+
+      openModal(
+        $("borrowerProfile")
+      );
+    }
+
+
+    $("closeBorrower").onclick = () => {
+
+      closeModal(
+        $("borrowerProfile")
+      );
+
+    };
+
+
+    /* =====================================================
+       BORROWER ADD
+    ===================================================== */
+
+    $("borrowerAdd").onclick = () => {
+
+      $("borrowerAddForm").reset();
+
+      $("newBorrowDate").value = today();
+
+      openModal(
+        $("borrowerAddModal")
+      );
+
+    };
+
+
+    $("cancelBorrowerAdd").onclick = () => {
+
+      closeModal(
+        $("borrowerAddModal")
+      );
+
+    };
+
+
+    $("borrowerAddForm").onsubmit =
+      function (e) {
+
+        e.preventDefault();
+
+
+        const data =
+          getBorrowers();
+
+
+        const b =
+          data.find(
+            x => x.id === currentBorrower
+          );
+
+
+        if (!b) return;
+
+
+        b.records.push({
+
+          id: newId(),
+
+          amount:
+            Number(
+              $("newBorrowAmount")
+                .value
+            ),
+
+          date:
+            $("newBorrowDate")
+              .value,
+
+          paid: 0,
+
+          paidDate: null
+
+        });
+
+
+        saveBorrowers(data);
+
+
+        closeModal(
+          $("borrowerAddModal")
+        );
+
+
+        renderBorrowers();
+
+        showBorrower();
+
+      };
+
+
+    /* =====================================================
+       BORROWER PAYMENT
+    ===================================================== */
+
+    $("borrowerPay").onclick = () => {
+
+      $("borrowerPayForm").reset();
+
+      $("borrowerReturnDate")
+        .value = today();
+
+
+      openModal(
+        $("borrowerPayModal")
+      );
+
+    };
+
+
+    $("cancelBorrowerPay").onclick = () => {
+
+      closeModal(
+        $("borrowerPayModal")
+      );
+
+    };
+
+
+    $("borrowerPayForm").onsubmit =
+      function (e) {
+
+        e.preventDefault();
+
+
+        let amount =
+          Number(
+            $("borrowerReturnAmount")
+              .value
+          );
+
+
+        const date =
+          $("borrowerReturnDate")
+            .value;
+
+
+        const data =
+          getBorrowers();
+
+
+        const b =
+          data.find(
+            x => x.id === currentBorrower
+          );
+
+
+        if (!b) return;
+
+
+        for (const r of b.records) {
+
+          if (amount <= 0) break;
+
+
+          const unpaid =
+            Number(r.amount) -
+            Number(r.paid || 0);
+
+
+          if (unpaid <= 0) continue;
+
+
+          const used =
+            Math.min(
+              amount,
+              unpaid
+            );
+
+
+          r.paid =
+            Number(r.paid || 0) + used;
+
+
+          r.paidDate = date;
+
+
+          amount -= used;
+
+        }
+
+
+        if (amount > 0) {
+
+          b.shopCredit =
+            Number(
+              b.shopCredit || 0
+            ) + amount;
+
+        }
+
+
+        saveBorrowers(data);
+
+
+        closeModal(
+          $("borrowerPayModal")
+        );
+
+
+        renderBorrowers();
+
+        showBorrower();
+
+      };
+
+
+    /* =====================================================
+       OWNER DISPLAY
+    ===================================================== */
+
+    function renderOwners() {
+
+      const grid =
+        $("ownerGrid");
+
+      const data =
+        getOwners();
+
+
+      grid.innerHTML = "";
+
+
+      if (!data.length) {
+
+        grid.innerHTML =
+          `<p class="text-gray-500">
+            No owners added.
+        </p>`;
+
+        return;
+      }
+
+
+      data.forEach(o => {
+
+        const t =
+          ownerTotals(o);
+
+
+        const div =
+          document.createElement("div");
+
+
+        div.className = "profile";
+
+
+        div.innerHTML = `
+
+            <h3 class="text-lg font-bold">
+                ${o.name}
+            </h3>
+
+            <p class="${t.remaining === 0
+            ? "completed"
+            : "remaining"
+          }">
+
+                ${t.remaining === 0
+            ? "✓ Completed"
+            : money(t.remaining)
+          }
+
+            </p>
+
+            <p class="text-sm text-gray-500 mt-2">
+                ${o.products || ""}
+            </p>
+
+        `;
+
+
+        div.onclick = () => {
+
+          currentOwner = o.id;
+
+          showOwner();
+
+        };
+
+
+        grid.appendChild(div);
+
+      });
+
+    }
+
+
+    /* =====================================================
+       OWNER FORM
+    ===================================================== */
+
+    function openOwnerForm() {
+
+      $("ownerForm").reset();
+
+      openModal(
+        $("ownerModal")
+      );
+    }
+
+
+    $("addOwner").onclick =
+      openOwnerForm;
+
+
+    $("headerOwner").onclick =
+      openOwnerForm;
+
+
+    $("cancelOwner").onclick = () => {
+
+      closeModal(
+        $("ownerModal")
+      );
+
+    };
+
+
+    $("ownerForm").onsubmit =
+      function (e) {
+
+        e.preventDefault();
+
+
+        const data =
+          getOwners();
+
+
+        data.push({
+
+          id: newId(),
+
+          name:
+            $("ownerName")
+              .value.trim(),
+
+          phone:
+            $("ownerPhone")
+              .value.trim(),
+
+          address:
+            $("ownerAddress")
+              .value.trim(),
+
+          products:
+            $("ownerProducts")
+              .value.trim(),
+
+          bills: [],
+
+          payments: []
+
+        });
+
+
+        saveOwners(data);
+
+
+        closeModal(
+          $("ownerModal")
+        );
+
+
+        renderOwners();
+
+      };
+
+
+    /* =====================================================
+       OWNER PROFILE
+    ===================================================== */
+
+    function showOwner() {
+
+      const o =
+        getOwners().find(
+          x => x.id === currentOwner
+        );
+
+
+      if (!o) return;
+
+
+      const t =
+        ownerTotals(o);
+
+
+      $("ownerNameDisplay")
+        .textContent = o.name;
+
+
+      $("ownerDebtDisplay")
+        .textContent =
+        t.remaining === 0
+          ? "✓ Completed"
+          : money(t.remaining) + " to pay";
+
+
+      $("ownerPhoneDisplay")
+        .textContent =
+        o.phone || "—";
+
+
+      $("ownerAddressDisplay")
+        .textContent =
+        o.address || "—";
+
+
+      $("ownerProductsDisplay")
+        .textContent =
+        o.products || "—";
+
+
+      $("ownerBillsTotal")
+        .textContent =
+        money(t.total);
+
+
+      $("ownerPaidTotal")
+        .textContent =
+        money(t.paid);
+
+
+      const bills =
+        $("ownerBills");
+
+
+      bills.innerHTML = "";
+
+
+      if (!o.bills.length) {
+
+        bills.innerHTML =
+          `<p class="text-gray-500">
+            No bills added.
+        </p>`;
+
+      }
+
+
+      o.bills.forEach(b => {
+
+        const remaining =
+          Math.max(
+            0,
+            Number(b.amount) -
+            Number(b.paid || 0)
+          );
+
+
+        const div =
+          document.createElement("div");
+
+
+        div.className = "item";
+
+
+        div.innerHTML = `
+
+            <b>
+                Amount To Pay:
+                ${money(b.amount)}
+            </b>
+
+            <p>
+                Bill Date:
+                ${dateText(b.date)}
+            </p>
+
+            <p>
+                Paid:
+                ${money(b.paid)}
+            </p>
+
+            ${b.paidDate
+            ?
+            `<p>
+                    Paid Date:
+                    ${dateText(b.paidDate)}
+                </p>`
+            : ""
+          }
+
+            <p class="${remaining === 0
+            ? "completed"
+            : "remaining"
+          }">
+
+                ${remaining === 0
+            ? "✓ Completed"
+            : money(remaining) + " Remaining"
+          }
+
+            </p>
+
+            ${b.fileKey
+            ?
+            `<button
+                    class="viewFile bg-blue-600
+                    text-white px-3 py-2
+                    rounded-lg mt-3">
+
+                    View Bill
+
+                </button>`
+            : ""
+          }
+
+        `;
+
+
+        const button =
+          div.querySelector(
+            ".viewFile"
+          );
+
+
+        if (button) {
+
+          button.onclick = async () => {
+
+            const file =
+              await getFile(
+                b.fileKey
+              );
+
+
+            if (!file) {
+
+              alert(
+                "Original bill not found."
+              );
+
+              return;
+            }
+
+
+            const url =
+              URL.createObjectURL(
+                file
+              );
+
+
+            $("viewer").innerHTML = "";
+
+
+            $("viewerTitle")
+              .textContent =
+              b.fileName || "Bill";
+
+
+            if (
+              file.type ===
+              "application/pdf"
+            ) {
+
+              const frame =
+                document.createElement(
+                  "iframe"
+                );
+
+
+              frame.src = url;
+
+
+              frame.style.width =
+                "100%";
+
+              frame.style.height =
+                "100%";
+
+              frame.style.border =
+                "0";
+
+
+              $("viewer")
+                .appendChild(
+                  frame
+                );
+
+            } else {
+
+              const img =
+                document.createElement(
+                  "img"
+                );
+
+
+              img.src = url;
+
+
+              img.style.maxWidth =
+                "100%";
+
+
+              $("viewer")
+                .appendChild(
+                  img
+                );
+            }
+
+
+            openModal(
+              $("viewerModal")
+            );
+
+          };
+
+        }
+
+
+        bills.appendChild(div);
+
+      });
+
+
+      const payments =
+        $("ownerPayments");
+
+
+      payments.innerHTML = "";
+
+
+      o.payments.forEach(p => {
+
+        const div =
+          document.createElement(
+            "div"
+          );
+
+
+        div.className = "item";
+
+
+        div.innerHTML = `
+
+            <b>
+                ${money(p.amount)}
+            </b>
+
+            <p>
+                Paid Date:
+                ${dateText(p.date)}
+            </p>
+
+        `;
+
+
+        payments.appendChild(div);
+
+      });
+
+
+      openModal(
+        $("ownerProfile")
+      );
+
+    }
+
+
+    $("closeOwner").onclick = () => {
+
+      closeModal(
+        $("ownerProfile")
+      );
+
+    };
+
+
+    /* =====================================================
+       INDEXED DB
+    ===================================================== */
+
+    const DB_NAME =
+      "LedgerFilesV3";
+
+    const STORE =
+      "files";
+
+
+    function openDB() {
+
+      return new Promise(
+        (resolve, reject) => {
+
+          const request =
+            indexedDB.open(
+              DB_NAME,
+              1
+            );
+
+
+          request.onupgradeneeded = () => {
+
+            const db =
+              request.result;
+
+
+            if (
+              !db.objectStoreNames
+                .contains(STORE)
+            ) {
+
+              db.createObjectStore(
+                STORE
+              );
+
+            }
+
+          };
+
+
+          request.onsuccess = () => {
+
+            resolve(
+              request.result
+            );
+
+          };
+
+
+          request.onerror = () => {
+
+            reject(
+              request.error
+            );
+
+          };
+
+        }
+      );
+    }
+
+
+    function saveFile(key, file) {
+
+      return openDB()
+        .then(db => {
+
+          return new Promise(
+            (resolve, reject) => {
+
+              const tx =
+                db.transaction(
+                  STORE,
+                  "readwrite"
+                );
+
+
+              tx.objectStore(
+                STORE
+              ).put(
+                file,
+                key
+              );
+
+
+              tx.oncomplete =
+                resolve;
+
+
+              tx.onerror = () => {
+
+                reject(
+                  tx.error
+                );
+
+              };
+
+            }
+          );
+
+        });
+    }
+
+
+    function getFile(key) {
+
+      return openDB()
+        .then(db => {
+
+          return new Promise(
+            (resolve, reject) => {
+
+              const tx =
+                db.transaction(
+                  STORE,
+                  "readonly"
+                );
+
+
+              const request =
+                tx.objectStore(
+                  STORE
+                ).get(key);
+
+
+              request.onsuccess = () => {
+
+                resolve(
+                  request.result
+                );
+
+              };
+
+
+              request.onerror = () => {
+
+                reject(
+                  request.error
+                );
+
+              };
+
+            }
+          );
+
+        });
+    }
+
+
+    /* =====================================================
+       SMART AMOUNT READER
+    ===================================================== */
+
+    function extractAmount(value) {
+
+      if (!value) return null;
+
+
+      return Number(
+        value
+          .replace(/[₹$€£]/g, "")
+          .replace(/,/g, "")
+          .trim()
+      );
+    }
+
+
+    function findPayableAmount(text) {
+
+      if (!text) return null;
+
+
+      /*
+         IMPORTANT:
+  
+         Highest priority is CURRENT BALANCE.
+  
+         This handles PDF extraction where
+         spaces/newlines may appear between
+         the words.
+      */
+
+
+      const currentPatterns = [
+
+        /current\s*balance\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /current\s*bal(?:ance)?\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /outstanding\s*balance\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /outstanding\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
+
+      ];
+
+
+      for (
+        const pattern of currentPatterns
+      ) {
+
+        const match =
+          text.match(pattern);
+
+
+        if (match) {
+
+          return extractAmount(
+            match[1]
+          );
+
+        }
+
+      }
+
+
+      /*
+         Balance Due / Balance
+      */
+
+      const balancePatterns = [
+
+        /balance\s*due\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /amount\s*due\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /due\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /balance\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
+
+      ];
+
+
+      for (
+        const pattern of balancePatterns
+      ) {
+
+        const match =
+          text.match(pattern);
+
+
+        if (match) {
+
+          return extractAmount(
+            match[1]
+          );
+
+        }
+
+      }
+
+
+      /*
+         Payable fields
+      */
+
+      const payablePatterns = [
+
+        /net\s*payable\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /amount\s*payable\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /payable\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /final\s*payable\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
+
+      ];
+
+
+      for (
+        const pattern of payablePatterns
+      ) {
+
+        const match =
+          text.match(pattern);
+
+
+        if (match) {
+
+          return extractAmount(
+            match[1]
+          );
+
+        }
+
+      }
+
+
+      /*
+         Total + Paid calculation
+      */
+
+      let total = null;
+      let paid = null;
+
+
+      const lines =
+        text
+          .replace(/\r/g, "\n")
+          .split("\n")
+          .map(x => x.trim())
+          .filter(Boolean);
+
+
+      for (
+        const line of lines
+      ) {
+
+        let match =
+          line.match(
+            /(?:grand\s*total|total\s*amount|total)\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
+          );
+
+
+        if (
+          match &&
+          total === null
+        ) {
+
+          total =
+            extractAmount(
+              match[1]
+            );
+
+        }
+
+
+        match =
+          line.match(
+            /(?:paid|amount\s*paid|received)\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
+          );
+
+
+        if (
+          match &&
+          paid === null
+        ) {
+
+          paid =
+            extractAmount(
+              match[1]
+            );
+
+        }
+
+      }
+
+
+      if (
+        total !== null &&
+        paid !== null
+      ) {
+
+        return Math.max(
+          0,
+          total - paid
+        );
+
+      }
+
+
+      /*
+         Final fallback
+      */
+
+      const finalPatterns = [
+
+        /final\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /grand\s*total\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+
+        /net\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
+
+      ];
+
+
+      for (
+        const pattern of finalPatterns
+      ) {
+
+        const match =
+          text.match(pattern);
+
+
+        if (match) {
+
+          return extractAmount(
+            match[1]
+          );
+
+        }
+
+      }
+
+
+      return null;
+    }
+
+
+    /* =====================================================
+       BILL DETAILS
+    ===================================================== */
+
+    function extractBillDetails(text) {
+
+      if (!text) return;
+
+
+      /*
+         AMOUNT
+      */
+
+      const payable =
+        findPayableAmount(text);
+
+
+      if (payable !== null) {
+
+        $("billPayableAmount")
+          .value = payable;
+
+      }
+
+
+      /*
+         DATE
+      */
+
+      const dateMatch =
+        text.match(
+          /(?:bill\s*date|invoice\s*date|date)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i
+        );
+
+
+      if (dateMatch) {
+
+        const p =
+          dateMatch[1]
+            .split(/[\/\-]/);
+
+
+        let d = p[0];
+        let m = p[1];
+        let y = p[2];
+
+
+        if (y.length === 2) {
+
+          y = "20" + y;
+
+        }
+
+
+        $("billDate")
+          .value =
+          `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+
+      }
+
+
+      /*
+         OWNER NAME
+      */
+
+      const lines =
+        text
+          .split(/\r?\n/)
+          .map(x => x.trim())
+          .filter(Boolean);
+
+
+      /*
+         For this type of bill,
+         first useful company line
+         becomes owner name.
+      */
+
+      const ignored =
+        /^(invoice|tax invoice|invoice no|invoice number|bill|bill no|date|total|grand total|amount|gst|cgst|sgst|phone|mobile|address|paid|received|balance|amount due|net payable)$/i;
+
+
+      for (
+        const line of lines
+      ) {
+
+        if (
+
+          line.length > 2 &&
+
+          line.length < 100 &&
+
+          !ignored.test(line) &&
+
+          !/^\d+$/.test(line) &&
+
+          !/^[₹$€£]?\s*[\d,.]+$/.test(line)
+
+        ) {
+
+          $("billOwnerName")
+            .value = line;
+
+          break;
+
+        }
+
+      }
+
+    }
+
+
+    /* =====================================================
+       PHOTO OCR
+    ===================================================== */
+
+    $("photoFile").onchange =
+      async function () {
+
+        const file =
+          this.files[0];
+
+
+        if (!file) return;
+
+
+        $("pdfFile").value = "";
+
+
+        $("readerStatus")
+          .textContent =
+          "Reading photo...";
+
+
+        try {
+
+          const result =
+            await Tesseract.recognize(
+              file,
+              "eng"
+            );
+
+
+          const text =
+            result.data.text;
+
+
+          $("billText")
+            .value = text;
+
+
+          extractBillDetails(text);
+
+
+          $("readerStatus")
+            .textContent =
+            "Photo read. Please check Amount To Pay.";
+
+        }
+        catch (e) {
+
+          console.error(e);
+
+
+          $("readerStatus")
+            .textContent =
+            "Could not read photo. Enter details manually.";
+
+        }
+
+      };
+
+
+    /* =====================================================
+       PDF READER
+    ===================================================== */
+
+    $("pdfFile").onchange =
+      async function () {
+
+        const file =
+          this.files[0];
+
+
+        if (!file) return;
+
+
+        $("photoFile").value = "";
+
+
+        $("readerStatus")
+          .textContent =
+          "Reading PDF...";
+
+
+        try {
+
+          const buffer =
+            await file.arrayBuffer();
+
+
+          const pdf =
+            await pdfjsLib
+              .getDocument({
+                data: buffer
+              })
+              .promise;
+
+
+          let text = "";
+
+
+          /*
+             Read normal PDF text.
+          */
+
+          for (
+            let i = 1;
+            i <= pdf.numPages;
+            i++
+          ) {
+
+            const page =
+              await pdf.getPage(i);
+
+
+            const content =
+              await page.getTextContent();
+
+
+            /*
+               Add spaces between
+               PDF text elements.
+
+               This is important because
+               PDF text extraction can place
+               words and numbers separately.
+            */
+
+            text +=
+              content.items
+                .map(x => x.str)
+                .join(" ")
+              + "\n";
+
+          }
+
+
+          if (
+            text.trim().length > 20
+          ) {
+
+            $("billText")
+              .value = text;
+
+
+            extractBillDetails(text);
+
+
+            $("readerStatus")
+              .textContent =
+              "PDF read successfully. Check Amount To Pay.";
+
+
+            return;
+
+          }
+
+
+          /*
+             Scanned PDF -> OCR
+          */
+
+          $("readerStatus")
+            .textContent =
+            "Scanned PDF detected. Reading with OCR...";
+
+
+          let ocrText = "";
+
+
+          const pages =
+            Math.min(
+              pdf.numPages,
+              10
+            );
+
+
+          for (
+            let i = 1;
+            i <= pages;
+            i++
+          ) {
+
+            const page =
+              await pdf.getPage(i);
+
+
+            const viewport =
+              page.getViewport({
+                scale: 1.5
+              });
+
+
+            const canvas =
+              document.createElement(
+                "canvas"
+              );
+
+
+            const ctx =
+              canvas.getContext("2d");
+
+
+            canvas.width =
+              viewport.width;
+
+
+            canvas.height =
+              viewport.height;
+
+
+            await page.render({
+
+              canvasContext: ctx,
+
+              viewport: viewport
+
+            }).promise;
+
+
+            const result =
+              await Tesseract.recognize(
+                canvas,
+                "eng"
+              );
+
+
+            ocrText +=
+              result.data.text +
+              "\n";
+
+          }
+
+
+          $("billText")
+            .value = ocrText;
+
+
+          extractBillDetails(
+            ocrText
+          );
+
+
+          $("readerStatus")
+            .textContent =
+            "Scanned PDF read. Check Amount To Pay.";
+
+        }
+        catch (e) {
+
+          console.error(e);
+
+
+          $("readerStatus")
+            .textContent =
+            "PDF could not be read automatically. Enter details manually.";
+
+        }
+
+      };
+
+
+    /* =====================================================
+       ADD BILL
+    ===================================================== */
+
+    $("addBill").onclick = () => {
+
+      $("billForm").reset();
+
+
+      $("billDate")
+        .value = today();
+
+
+      $("readerStatus")
+        .textContent = "";
+
+
+      openModal(
+        $("billModal")
+      );
+
+    };
+
+
+    $("cancelBill").onclick = () => {
+
+      $("billForm").reset();
+
+
+      closeModal(
+        $("billModal")
+      );
+
+    };
+
+
+    $("billForm").onsubmit =
+      async function (e) {
+
+        e.preventDefault();
+
+
+        const pdf =
+          $("pdfFile").files[0];
+
+
+        const photo =
+          $("photoFile").files[0];
+
+
+        const text =
+          $("billText")
+            .value.trim();
+
+
+        if (
+          !pdf &&
+          !photo &&
+          !text
+        ) {
+
+          alert(
+            "Please upload a PDF, photo, or enter text."
+          );
+
+          return;
+
+        }
+
+
+        const data =
+          getOwners();
+
+
+        const owner =
+          data.find(
+            x => x.id === currentOwner
+          );
+
+
+        if (!owner) return;
+
+
+        if (text) {
+
+          extractBillDetails(text);
+
+        }
+
+
+        const amount =
+          Number(
+            $("billPayableAmount")
+              .value
+          );
+
+
+        if (amount <= 0) {
+
+          alert(
+            "Amount To Pay could not be identified. Please enter it manually."
+          );
+
+          return;
+
+        }
+
+
+        let file = null;
+
+
+        if (pdf)
+          file = pdf;
+
+
+        if (photo)
+          file = photo;
+
+
+        const billId =
+          newId();
+
+
+        if (file) {
+
+          await saveFile(
+            billId,
+            file
+          );
+
+        }
+
+
+        owner.bills.push({
+
+          id: billId,
+
+          ownerName:
+            $("billOwnerName")
+              .value.trim()
+            || owner.name,
+
+          amount: amount,
+
+          date:
+            $("billDate")
+              .value
+            || today(),
+
+          paid: 0,
+
+          paidDate: null,
+
+          fileKey:
+            file
+              ? billId
+              : null,
+
+          fileName:
+            file
+              ? file.name
+              : ""
+
+        });
+
+
+        saveOwners(data);
+
+
+        $("billForm").reset();
+
+
+        closeModal(
+          $("billModal")
+        );
+
+
+        renderOwners();
+
+
+        showOwner();
+
+      };
+
+
+    /* =====================================================
+       OWNER PAYMENT
+    ===================================================== */
+
+    $("ownerPay").onclick = () => {
+
+      const o =
+        getOwners().find(
+          x => x.id === currentOwner
+        );
+
+
+      if (!o) return;
+
+
+      const t =
+        ownerTotals(o);
+
+
+      if (
+        t.remaining <= 0
+      ) {
+
+        alert(
+          "This owner has no remaining amount."
+        );
+
+        return;
+
+      }
+
+
+      $("ownerPayForm").reset();
+
+
+      $("ownerPaymentDate")
+        .value = today();
+
+
+      openModal(
+        $("ownerPayModal")
+      );
+
+    };
+
+
+    $("cancelOwnerPay").onclick = () => {
+
+      closeModal(
+        $("ownerPayModal")
+      );
+
+    };
+
+
+    $("ownerPayForm").onsubmit =
+      function (e) {
+
+        e.preventDefault();
+
+
+        let amount =
+          Number(
+            $("ownerPaymentAmount")
+              .value
+          );
+
+
+        const date =
+          $("ownerPaymentDate")
+            .value;
+
+
+        const data =
+          getOwners();
+
+
+        const o =
+          data.find(
+            x => x.id === currentOwner
+          );
+
+
+        if (!o) return;
+
+
+        for (
+          const bill of o.bills
+        ) {
+
+          if (amount <= 0) break;
+
+
+          const unpaid =
+            Number(bill.amount) -
+            Number(bill.paid || 0);
+
+
+          if (unpaid <= 0) continue;
+
+
+          const used =
+            Math.min(
+              amount,
+              unpaid
+            );
+
+
+          bill.paid =
+            Number(bill.paid || 0) + used;
+
+
+          bill.paidDate =
+            date;
+
+
+          amount -= used;
+
+        }
+
+
+        o.payments.push({
+
+          id: newId(),
+
+          amount:
+            Number(
+              $("ownerPaymentAmount")
+                .value
+            ),
+
+          date: date
+
+        });
+
+
+        saveOwners(data);
+
+
+        closeModal(
+          $("ownerPayModal")
+        );
+
+
+        renderOwners();
+
+
+        showOwner();
+
+      };
+
+
+    /* =====================================================
+       BILL VIEWER
+    ===================================================== */
+
+    $("closeViewer").onclick = () => {
+
+      closeModal(
+        $("viewerModal")
+      );
+
+
+      $("viewer").innerHTML = "";
+
+    };
+
+
+    /* =====================================================
+       INITIAL LOAD
+    ===================================================== */
+
+    renderBorrowers();
+
+    renderOwners();
+
+  </script>
+
+</body>
+
+</html>
+```
