@@ -4,191 +4,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-
-  <title>Credit & Debt Ledger</title>
+  <title>KhaataPro | Shopkeeper Credit & Debt Ledger</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <style>
-    /* =====================================================
-       BASIC PAGE
-    ===================================================== */
-
     * {
       box-sizing: border-box;
     }
 
-    html {
-      min-height: 100%;
-    }
-
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
       min-height: 100vh;
       overflow-x: hidden;
-      background: #07111f;
+      background: #09090b;
+      color: #fafafa;
     }
 
-
-    /* =====================================================
-       MOVING WATER BACKGROUND
-    ===================================================== */
-
-    #waterBackground {
+    /* Ambient Gold Glow Grid Background */
+    #ambientBg {
       position: fixed;
       inset: 0;
       z-index: -10;
-      overflow: hidden;
-
       background:
-        radial-gradient(circle at 20% 30%,
-          rgba(9, 9, 113, 0.973),
-          transparent 35%),
-        radial-gradient(circle at 80% 20%,
-          rgba(68, 68, 247, 0.4),
-          transparent 35%),
-        radial-gradient(circle at 50% 80%,
-          rgba(26, 24, 71, 0.35),
-          transparent 40%),
-        #303652;
+        radial-gradient(circle at 15% 25%, rgba(234, 179, 8, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 75%, rgba(250, 204, 21, 0.08), transparent 40%),
+        #09090b;
+      overflow: hidden;
     }
 
-    .waterBlob {
+    #gridPattern {
       position: absolute;
-      width: 55vw;
-      height: 55vw;
-      max-width: 750px;
-      max-height: 750px;
-      border-radius: 40% 60% 65% 35% / 45% 40% 60% 55%;
-      filter: blur(45px);
-      opacity: .55;
-      animation: waterMove 12s ease-in-out infinite alternate;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
     }
 
-    .waterBlob:nth-child(1) {
-      background: radial-gradient(circle, #0a0770, #040c5f 45%, transparent 70%);
-      left: -15%;
-      top: -15%;
-    }
-
-    .waterBlob:nth-child(2) {
-      background: radial-gradient(circle, #041671, #08056a 45%, transparent 70%);
-      right: -15%;
-      top: 5%;
-      animation-delay: -4s;
-    }
-
-    .waterBlob:nth-child(3) {
-      background: radial-gradient(circle, #02033b, #06055c 45%, transparent 70%);
-      left: 25%;
-      bottom: -30%;
-      animation-delay: -8s;
-    }
-
-    #waterWave {
-      position: absolute;
-      inset: -20%;
-      background: repeating-radial-gradient(ellipse at center,
-          transparent 0px,
-          transparent 80px,
-          rgba(255, 255, 255, .035) 100px,
-          transparent 120px);
-      mix-blend-mode: screen;
-      animation: waveMove 18s linear infinite;
-    }
-
+    /* Yellow Glow Cursor */
     #mouseGlow {
       position: absolute;
       width: 320px;
       height: 320px;
       border-radius: 50%;
       pointer-events: none;
-      background: radial-gradient(circle,
-          rgba(237, 232, 232, 0.942) 0%,
-          rgba(205, 211, 212, 0.25) 20%,
-          rgba(232, 236, 238, 0.18) 45%,
-          transparent 70%);
-      filter: blur(25px);
+      background: radial-gradient(circle, rgba(250, 204, 21, 0.15) 0%, rgba(234, 179, 8, 0.04) 40%, transparent 70%);
+      filter: blur(35px);
       transform: translate(-50%, -50%);
-      transition: width .25s ease, height .25s ease;
+      transition: width .2s ease, height .2s ease;
+      z-index: -5;
     }
 
-    #waterShade {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(120deg,
-          rgba(0, 0, 0, .18),
-          rgba(0, 0, 0, .05),
-          rgba(0, 0, 0, .22));
-      pointer-events: none;
+    /* Cards & Glassmorphism */
+    .ledger-card {
+      background: #121215;
+      border: 1px solid #27272a;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
     }
 
-    @keyframes waterMove {
-      0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
-      30% { transform: translate3d(10vw, 5vh, 0) rotate(20deg) scale(1.1); }
-      60% { transform: translate3d(-5vw, 12vh, 0) rotate(45deg) scale(.95); }
-      100% { transform: translate3d(8vw, -8vh, 0) rotate(80deg) scale(1.15); }
-    }
-
-    @keyframes waveMove {
-      0% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(180deg) scale(1.15); }
-      100% { transform: rotate(360deg) scale(1); }
-    }
-
-
-    /* =====================================================
-       APPLICATION STYLING
-    ===================================================== */
-
-    .card {
-      background: rgba(139, 148, 232, 0.94);
-      border-radius: 18px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, .20);
-      backdrop-filter: blur(8px);
-    }
-
-    /* Portrait card setup: taller than wide */
-    .profile {
-      background: rgba(255, 255, 255, 0.92);
-      border: 2px solid #e5e7eb;
+    /* Portrait Cards (Height > Width) */
+    .profile-portrait {
+      background: #18181b;
+      border: 1px solid #27272a;
       border-radius: 16px;
       padding: 16px;
       cursor: pointer;
-      min-height: 220px;
+      min-height: 230px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       text-align: center;
-      transition: transform .2s, box-shadow .2s, border-color .2s;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
     }
 
-    .profile:hover {
+    .profile-portrait:hover {
       transform: translateY(-4px);
-      border-color: #3b82f6;
-      box-shadow: 0 12px 24px rgba(0, 0, 0, .20);
+      border-color: #facc15;
+      box-shadow: 0 10px 25px rgba(250, 204, 21, 0.15);
     }
 
     .box {
-      border: 2px solid #e5e7eb;
+      border: 1px solid #27272a;
       border-radius: 12px;
       padding: 14px;
-      background: white;
+      background: #18181b;
     }
 
-    /* Floating Fixed Modals */
+    /* Centered Overlaid Modals */
     .modal {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, .65);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 15px;
+      padding: 16px;
       z-index: 9999;
       overflow-y: auto;
     }
@@ -199,13 +116,14 @@
 
     .modal-content {
       width: 100%;
-      max-width: 700px;
+      max-width: 650px;
       max-height: 90vh;
       overflow-y: auto;
-      background: white;
-      border-radius: 16px;
+      background: #121215;
+      border: 1px solid #3f3f46;
+      border-radius: 20px;
       padding: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
       position: relative;
       margin: auto;
     }
@@ -213,273 +131,416 @@
     input,
     textarea {
       width: 100%;
-      padding: 10px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      margin-top: 5px;
+      padding: 10px 14px;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 10px;
+      color: #fafafa;
+      margin-top: 6px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: #facc15;
+      box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.2);
     }
 
     textarea {
-      min-height: 90px;
+      min-height: 80px;
     }
 
     .completed {
-      color: #16a34a;
-      font-weight: bold;
+      color: #22c55e;
+      font-weight: 700;
     }
 
     .remaining {
-      color: #dc2626;
-      font-weight: bold;
-    }
-
-    .partial {
-      color: #ea580c;
-      font-weight: bold;
+      color: #f87171;
+      font-weight: 700;
     }
 
     .item {
-      border: 2px solid #e5e7eb;
+      border: 1px solid #27272a;
       border-radius: 12px;
-      padding: 15px;
-      background: #fafafa;
-    }
-
-    /* Page container layering */
-    header,
-    main,
-    .card {
-      position: relative;
-      z-index: 1;
+      padding: 14px;
+      background: #18181b;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- =====================================================
-       WATER BACKGROUND
-  ===================================================== -->
-  <div id="waterBackground">
-    <div class="waterBlob"></div>
-    <div class="waterBlob"></div>
-    <div class="waterBlob"></div>
-    <div id="waterWave"></div>
+  <div id="ambientBg">
+    <div id="gridPattern"></div>
     <div id="mouseGlow"></div>
-    <div id="waterShade"></div>
+  </div>
+
+  <!-- =====================================================
+       AUTH VIEW (Shopkeeper Login / Register / OTP)
+  ===================================================== -->
+  <div id="authView" class="min-h-screen flex items-center justify-center p-4">
+    <div
+      class="max-w-4xl w-full grid md:grid-cols-12 bg-[#121215] border border-yellow-500/30 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-xl">
+
+      <!-- Interactive SVG Shopkeeper Character -->
+      <div
+        class="md:col-span-5 bg-gradient-to-b from-[#1c1917] to-[#0c0a09] p-6 flex flex-col justify-between items-center text-center border-b md:border-b-0 md:border-r border-zinc-800 relative">
+        <div class="z-10">
+          <div
+            class="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 px-3 py-1 rounded-full text-yellow-400 text-xs font-bold tracking-wider uppercase mb-2">
+            Store Owner Portal
+          </div>
+          <h2 class="text-xl font-extrabold text-white">Smart Store Assistant</h2>
+          <p class="text-xs text-zinc-400">Keep every ledger balanced & verified</p>
+        </div>
+
+        <!-- SVG Shopkeeper with Head, Eyes & Pointing Arm Tracking Mouse -->
+        <div class="my-4 relative w-56 h-64">
+          <svg id="shopkeeperSvg" viewBox="0 0 240 280"
+            class="w-full h-full filter drop-shadow-[0_10px_15px_rgba(250,204,21,0.15)]">
+            <!-- Shopfront Awning Backdrop -->
+            <path d="M20 60 L220 60 L200 20 L40 20 Z" fill="#27272a" stroke="#facc15" stroke-width="2" />
+            <path d="M30 60 L50 20 M80 60 L95 20 M145 60 L135 20 M190 60 L180 20" stroke="#facc15" stroke-width="2"
+              stroke-dasharray="2 2" />
+
+            <!-- Torso / Apron -->
+            <path d="M70 170 L170 170 L180 280 L60 280 Z" fill="#eab308" />
+            <path d="M85 170 L120 220 L155 170 Z" fill="#ca8a04" />
+            <rect x="90" y="220" width="60" height="40" rx="6" fill="#18181b" stroke="#71717a" stroke-width="1.5" />
+            <line x1="100" y1="235" x2="140" y2="235" stroke="#facc15" stroke-width="2" />
+
+            <!-- Head Group (Tilts toward cursor) -->
+            <g id="skHead" transform="translate(120, 115)">
+              <circle cx="0" cy="0" r="45" fill="#fde047" />
+              <!-- Shopkeeper Cap -->
+              <path d="M -45 -10 Q 0 -50 45 -10 Q 55 -5 45 0 Q 0 -25 -45 0 Z" fill="#18181b" stroke="#facc15"
+                stroke-width="1.5" />
+
+              <!-- Eyeballs -->
+              <circle cx="-16" cy="-2" r="8" fill="#ffffff" />
+              <circle cx="16" cy="-2" r="8" fill="#ffffff" />
+
+              <!-- Dynamic Pupils (Move with cursor) -->
+              <circle id="skPupilL" cx="-16" cy="-2" r="3.5" fill="#09090b" />
+              <circle id="skPupilR" cx="16" cy="-2" r="3.5" fill="#09090b" />
+
+              <!-- Friendly Moustache & Smile -->
+              <path d="M -18 16 Q 0 10 18 16 Q 0 28 -18 16 Z" fill="#18181b" />
+              <path d="M -10 24 Q 0 30 10 24" stroke="#713f12" stroke-width="2" fill="none" stroke-linecap="round" />
+            </g>
+
+            <!-- Arm & Outstretched Hand Pointing Right to the Form -->
+            <g transform="translate(160, 180)">
+              <path d="M 0 0 Q 30 15 50 5 Q 65 -5 75 -2" stroke="#eab308" stroke-width="18" stroke-linecap="round"
+                fill="none" />
+              <!-- Pointing Finger Hand -->
+              <circle cx="75" cy="-2" r="9" fill="#fde047" />
+              <path d="M 75 -4 L 92 -6" stroke="#fde047" stroke-width="5" stroke-linecap="round" />
+            </g>
+          </svg>
+        </div>
+
+        <div class="text-xs text-yellow-400/90 font-medium">
+          👉 Please register or log in to manage ledgers
+        </div>
+      </div>
+
+      <!-- Auth Form Controls -->
+      <div class="md:col-span-7 p-8 flex flex-col justify-center">
+        <!-- Tab Selector -->
+        <div class="flex bg-zinc-900 p-1 rounded-xl mb-6 border border-zinc-800">
+          <button id="tabRegister"
+            class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-yellow-400 text-black shadow">
+            Register Shop
+          </button>
+          <button id="tabLogin"
+            class="flex-1 py-2 text-xs font-bold rounded-lg transition text-zinc-400 hover:text-white">
+            Log In
+          </button>
+        </div>
+
+        <!-- Simulated OTP Banner -->
+        <div id="otpAlertBanner"
+          class="hidden mb-4 p-3 bg-yellow-400/10 border border-yellow-400 text-yellow-300 rounded-xl text-xs flex justify-between items-center">
+          <div>
+            <b>Email Verification OTP:</b> <span id="mockOtpDisplay"
+              class="font-mono text-sm font-black text-white ml-1"></span>
+          </div>
+          <span class="text-[10px] text-zinc-400">(Enter below to verify)</span>
+        </div>
+
+        <!-- Phase 1: Register Form -->
+        <form id="authRegisterForm" class="space-y-3">
+          <div>
+            <label class="text-xs font-semibold text-zinc-400">Shop Name</label>
+            <input id="regShopName" required placeholder="e.g. Mahalakshmi Provision Stores">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-zinc-400">Shopkeeper Name</label>
+            <input id="regOwnerName" required placeholder="Owner full name">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-zinc-400">Email Address (for verification)</label>
+            <input id="regEmail" type="email" required placeholder="owner@store.com">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-zinc-400">Password</label>
+            <input id="regPassword" type="password" required placeholder="••••••••">
+          </div>
+          <button type="submit"
+            class="w-full mt-4 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-xl transition shadow-lg flex justify-center items-center gap-2">
+            Verify Email & Register
+          </button>
+        </form>
+
+        <!-- Phase 1.5: OTP Verification Form -->
+        <form id="authOtpForm" class="space-y-4 hidden">
+          <div class="text-center">
+            <h3 class="text-lg font-bold text-white">Enter Email OTP</h3>
+            <p class="text-xs text-zinc-400 mt-1">We sent a 4-digit code to your registered email</p>
+          </div>
+          <div>
+            <input id="otpCodeInput" type="text" maxlength="6" required placeholder="Enter OTP code"
+              class="text-center font-mono text-xl tracking-widest text-yellow-400">
+          </div>
+          <button type="submit"
+            class="w-full py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-xl transition shadow">
+            Confirm & Enter Dashboard
+          </button>
+          <button type="button" id="backToRegBtn" class="w-full text-xs text-zinc-500 hover:text-zinc-300">
+            ← Change Registration Details
+          </button>
+        </form>
+
+        <!-- Phase 2: Login Form -->
+        <form id="authLoginForm" class="space-y-3 hidden">
+          <div>
+            <label class="text-xs font-semibold text-zinc-400">Registered Email</label>
+            <input id="loginEmail" type="email" required placeholder="owner@store.com">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-zinc-400">Password</label>
+            <input id="loginPassword" type="password" required placeholder="••••••••">
+          </div>
+          <button type="submit"
+            class="w-full mt-4 py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold rounded-xl transition shadow-lg">
+            Log In to Store
+          </button>
+        </form>
+      </div>
+
+    </div>
   </div>
 
 
   <!-- =====================================================
-       HEADER
+       APP CONTAINER (Protected Dashboard)
   ===================================================== -->
-  <header class="p-4 max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
-    <h1 class="text-3xl font-bold text-white tracking-wide">
-      Credit & Debt Ledger
-    </h1>
+  <div id="appDashboard" class="hidden">
 
-    <div class="flex gap-2">
-      <button id="headerBorrower" class="bg-white text-blue-700 font-semibold px-4 py-2 rounded-lg shadow hover:bg-blue-50 transition">
-        + Borrower
-      </button>
+    <!-- HEADER -->
+    <header
+      class="p-4 max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4 border-b border-zinc-800 pb-4">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-yellow-400 text-black flex items-center justify-center font-black text-xl shadow">
+          ₹
+        </div>
+        <div>
+          <h1 id="headerShopTitle" class="text-xl font-black text-yellow-400 tracking-wide">
+            KhaataPro Ledger
+          </h1>
+          <p id="headerOwnerName" class="text-xs text-zinc-400">Verified Shopkeeper</p>
+        </div>
+      </div>
 
-      <button id="headerOwner" class="bg-white text-purple-700 font-semibold px-4 py-2 rounded-lg shadow hover:bg-purple-50 transition">
-        + Owner
-      </button>
-    </div>
-  </header>
+      <div class="flex items-center gap-3">
+        <button id="headerBorrower"
+          class="bg-zinc-800 hover:bg-zinc-700 text-yellow-400 border border-yellow-400/40 text-xs font-bold px-3 py-2 rounded-xl transition shadow">
+          + Borrower
+        </button>
+        <button id="headerOwner"
+          class="bg-zinc-800 hover:bg-zinc-700 text-yellow-400 border border-yellow-400/40 text-xs font-bold px-3 py-2 rounded-xl transition shadow">
+          + Owner
+        </button>
+        <button id="logoutBtn"
+          class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold px-3 py-2 rounded-xl transition">
+          Log Out
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN DASHBOARD -->
+    <main class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+
+      <!-- BORROWERS SECTION -->
+      <section class="ledger-card p-6">
+        <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+          <div>
+            <h2 class="text-2xl font-black text-yellow-400 flex items-center gap-2">
+              Borrowers (Receivables)
+            </h2>
+            <p class="text-xs text-zinc-400">Customers who took goods or money on credit</p>
+          </div>
+          <button id="addBorrower"
+            class="bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm px-4 py-2.5 rounded-xl transition shadow">
+            + Add Borrower
+          </button>
+        </div>
+
+        <div id="borrowerGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+      </section>
+
+      <!-- MY DEBT SECTION -->
+      <section class="ledger-card p-6">
+        <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+          <div>
+            <h2 class="text-2xl font-black text-zinc-100 flex items-center gap-2">
+              My Debt (Suppliers / Owners)
+            </h2>
+            <p class="text-xs text-zinc-400">Wholesalers and vendors you need to pay</p>
+          </div>
+          <button id="addOwner"
+            class="bg-zinc-800 hover:bg-zinc-700 text-yellow-400 border border-yellow-400 font-extrabold text-sm px-4 py-2.5 rounded-xl transition shadow">
+            + Add Owner
+          </button>
+        </div>
+
+        <div id="ownerGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"></div>
+      </section>
+
+    </main>
+  </div>
 
 
   <!-- =====================================================
-       MAIN
-  ===================================================== -->
-  <main class="max-w-7xl mx-auto px-4 pb-12 space-y-8">
-
-    <!-- BORROWERS -->
-    <section class="card p-5">
-      <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
-        <div>
-          <h2 class="text-2xl font-bold text-blue-900">
-            Borrowers
-          </h2>
-          <p class="text-blue-950/70 font-medium">
-            People who have taken money from you
-          </p>
-        </div>
-
-        <button id="addBorrower" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition shadow">
-          + Add Borrower
-        </button>
-      </div>
-
-      <!-- Narrow columns (2 to 5 columns) to produce taller portrait cards -->
-      <div id="borrowerGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      </div>
-    </section>
-
-
-    <!-- MY DEBT -->
-    <section class="card p-5">
-      <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
-        <div>
-          <h2 class="text-2xl font-bold text-purple-900">
-            My Debt
-          </h2>
-          <p class="text-purple-950/70 font-medium">
-            Owners / suppliers whom you have to pay
-          </p>
-        </div>
-
-        <button id="addOwner" class="bg-purple-600 hover:bg-purple-700 text-white font-medium px-4 py-2 rounded-lg transition shadow">
-          + Add Owner
-        </button>
-      </div>
-
-      <!-- Narrow columns (2 to 5 columns) to produce taller portrait cards -->
-      <div id="ownerGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      </div>
-    </section>
-
-  </main>
-
-
-  <!-- =====================================================
-       BORROWER MODAL
+       BORROWER MODALS
   ===================================================== -->
   <div id="borrowerModal" class="modal">
     <div class="modal-content">
-      <h2 class="text-xl font-bold mb-4 text-gray-800">
-        Add Borrower
-      </h2>
-
-      <form id="borrowerForm">
-        <label class="text-sm font-semibold text-gray-700">Name</label>
-        <input id="borrowerName" required placeholder="Borrower name">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Phone</label>
-        <input id="borrowerPhone" placeholder="Phone number">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Address</label>
-        <textarea id="borrowerAddress" placeholder="Address details"></textarea>
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Amount Taken (₹)</label>
-        <input id="borrowerAmount" type="number" min="0" required placeholder="Amount">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Date</label>
-        <input id="borrowerDate" type="date" required>
-
-        <div class="flex justify-end gap-2 mt-5">
-          <button type="button" id="cancelBorrower" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
-            Cancel
-          </button>
-          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-            Save
-          </button>
+      <h2 class="text-xl font-bold text-yellow-400 mb-4">Add Borrower</h2>
+      <form id="borrowerForm" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Borrower Name</label>
+          <input id="borrowerName" required placeholder="e.g. Ramesh Kumar">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Phone</label>
+          <input id="borrowerPhone" placeholder="+91 9876543210">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Address / House No.</label>
+          <textarea id="borrowerAddress" placeholder="Address details"></textarea>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Amount Taken (₹)</label>
+          <input id="borrowerAmount" type="number" min="0" required placeholder="₹ 0">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Date</label>
+          <input id="borrowerDate" type="date" required>
+        </div>
+        <div class="flex justify-end gap-2 mt-6">
+          <button type="button" id="cancelBorrower"
+            class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-xl text-sm transition">Cancel</button>
+          <button
+            class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-5 py-2 rounded-xl text-sm transition">Save
+            Borrower</button>
         </div>
       </form>
     </div>
   </div>
 
-
-  <!-- =====================================================
-       BORROWER PROFILE
-  ===================================================== -->
   <div id="borrowerProfile" class="modal">
     <div class="modal-content">
       <div class="flex justify-between items-start">
         <div>
-          <h2 id="borrowerNameDisplay" class="text-2xl font-bold text-gray-800"></h2>
+          <h2 id="borrowerNameDisplay" class="text-2xl font-black text-yellow-400"></h2>
           <p id="borrowerStatus" class="font-bold mt-1"></p>
         </div>
-        <button id="closeBorrower" class="text-2xl font-bold text-gray-400 hover:text-gray-700 transition">✕</button>
+        <button id="closeBorrower" class="text-zinc-500 hover:text-white text-2xl">✕</button>
       </div>
 
       <div class="grid sm:grid-cols-2 gap-3 mt-5">
         <div class="box">
-          <b>Phone</b>
-          <p id="borrowerPhoneDisplay" class="text-gray-600"></p>
+          <b class="text-zinc-400 text-xs uppercase">Phone</b>
+          <p id="borrowerPhoneDisplay" class="text-sm font-medium mt-1"></p>
         </div>
         <div class="box">
-          <b>Address</b>
-          <p id="borrowerAddressDisplay" class="text-gray-600"></p>
+          <b class="text-zinc-400 text-xs uppercase">Address</b>
+          <p id="borrowerAddressDisplay" class="text-sm font-medium mt-1"></p>
         </div>
         <div class="box">
-          <b>Total Taken</b>
-          <p id="borrowerTotal" class="text-gray-900 font-semibold"></p>
+          <b class="text-zinc-400 text-xs uppercase">Total Taken</b>
+          <p id="borrowerTotal" class="text-sm font-bold text-zinc-100 mt-1"></p>
         </div>
         <div class="box">
-          <b>Total Returned</b>
-          <p id="borrowerPaidTotal" class="text-green-600 font-semibold"></p>
+          <b class="text-zinc-400 text-xs uppercase">Total Returned</b>
+          <p id="borrowerPaidTotal" class="text-sm font-bold text-green-400 mt-1"></p>
         </div>
         <div class="box sm:col-span-2">
-          <b>Remaining Balance</b>
-          <p id="borrowerRemaining" class="text-red-600 font-bold text-lg"></p>
+          <b class="text-zinc-400 text-xs uppercase">Current Outstanding Balance</b>
+          <p id="borrowerRemaining" class="text-lg font-black text-red-400 mt-1"></p>
         </div>
       </div>
 
-      <h3 class="text-lg font-bold mt-6 mb-2 text-gray-800">Amount History</h3>
+      <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mt-6 mb-2">Transaction History</h3>
       <div id="borrowerHistory" class="space-y-3"></div>
 
       <div class="flex flex-wrap gap-2 mt-6">
-        <button id="borrowerAdd" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-          + Add Amount
-        </button>
-        <button id="borrowerPay" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
-          Record Payment
-        </button>
+        <button id="borrowerAdd"
+          class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-xs px-4 py-2 rounded-xl transition">+ Add
+          Amount</button>
+        <button id="borrowerPay"
+          class="bg-green-500 hover:bg-green-400 text-black font-bold text-xs px-4 py-2 rounded-xl transition">Record
+          Returned Payment</button>
       </div>
 
-      <p id="borrowerExtra" class="font-bold mt-4"></p>
+      <p id="borrowerExtra" class="mt-4 text-xs font-semibold"></p>
     </div>
   </div>
 
-
-  <!-- =====================================================
-       BORROWER ADD
-  ===================================================== -->
   <div id="borrowerAddModal" class="modal">
     <div class="modal-content">
-      <h2 class="text-xl font-bold mb-4 text-gray-800">Add Amount</h2>
-      <form id="borrowerAddForm">
-        <label class="text-sm font-semibold text-gray-700">Amount</label>
-        <input id="newBorrowAmount" type="number" min="0" required placeholder="Amount">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Date</label>
-        <input id="newBorrowDate" type="date" required>
-
+      <h2 class="text-xl font-bold text-yellow-400 mb-4">Add More Credit</h2>
+      <form id="borrowerAddForm" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Additional Amount (₹)</label>
+          <input id="newBorrowAmount" type="number" min="0" required placeholder="₹ 0">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Date</label>
+          <input id="newBorrowDate" type="date" required>
+        </div>
         <div class="flex justify-end gap-2 mt-5">
-          <button type="button" id="cancelBorrowerAdd" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
-            Cancel
-          </button>
-          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-            Save
-          </button>
+          <button type="button" id="cancelBorrowerAdd"
+            class="bg-zinc-800 text-zinc-300 px-4 py-2 rounded-xl text-sm">Cancel</button>
+          <button
+            class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-4 py-2 rounded-xl text-sm">Save</button>
         </div>
       </form>
     </div>
   </div>
 
-
-  <!-- =====================================================
-       BORROWER PAYMENT
-  ===================================================== -->
   <div id="borrowerPayModal" class="modal">
     <div class="modal-content">
-      <h2 class="text-xl font-bold mb-4 text-gray-800">Return Money</h2>
-      <form id="borrowerPayForm">
-        <label class="text-sm font-semibold text-gray-700">How much money was returned?</label>
-        <input id="borrowerReturnAmount" type="number" min="0" required placeholder="Amount">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Paid Date</label>
-        <input id="borrowerReturnDate" type="date" required>
-
+      <h2 class="text-xl font-bold text-green-400 mb-4">Record Returned Money</h2>
+      <form id="borrowerPayForm" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Amount Returned (₹)</label>
+          <input id="borrowerReturnAmount" type="number" min="0" required placeholder="₹ 0">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Paid Date</label>
+          <input id="borrowerReturnDate" type="date" required>
+        </div>
         <div class="flex justify-end gap-2 mt-5">
-          <button type="button" id="cancelBorrowerPay" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
-            Cancel
-          </button>
-          <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
-            Save Payment
-          </button>
+          <button type="button" id="cancelBorrowerPay"
+            class="bg-zinc-800 text-zinc-300 px-4 py-2 rounded-xl text-sm">Cancel</button>
+          <button class="bg-green-500 hover:bg-green-400 text-black font-bold px-5 py-2 rounded-xl text-sm">Confirm
+            Payment</button>
         </div>
       </form>
     </div>
@@ -487,396 +548,430 @@
 
 
   <!-- =====================================================
-       OWNER FORM
+       OWNER / SUPPLIER MODALS
   ===================================================== -->
   <div id="ownerModal" class="modal">
     <div class="modal-content">
-      <h2 class="text-xl font-bold mb-4 text-gray-800">Add Owner / Supplier</h2>
-      <form id="ownerForm">
-        <label class="text-sm font-semibold text-gray-700">Owner Name</label>
-        <input id="ownerName" required placeholder="Owner/Company name">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Phone</label>
-        <input id="ownerPhone" placeholder="Phone number">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Address</label>
-        <textarea id="ownerAddress" placeholder="Address details"></textarea>
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Product They Supply</label>
-        <textarea id="ownerProducts" placeholder="Supplied goods/materials"></textarea>
-
+      <h2 class="text-xl font-bold text-yellow-400 mb-4">Add Supplier / Owner</h2>
+      <form id="ownerForm" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Supplier / Firm Name</label>
+          <input id="ownerName" required placeholder="e.g. Balaji Agencies">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Phone</label>
+          <input id="ownerPhone" placeholder="+91 9876543210">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Address</label>
+          <textarea id="ownerAddress" placeholder="Supplier address"></textarea>
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Products Supplied</label>
+          <textarea id="ownerProducts" placeholder="e.g. Edible Oils, Spices, Grains"></textarea>
+        </div>
         <div class="flex justify-end gap-2 mt-5">
-          <button type="button" id="cancelOwner" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
-            Cancel
-          </button>
-          <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
-            Save
-          </button>
+          <button type="button" id="cancelOwner"
+            class="bg-zinc-800 text-zinc-300 px-4 py-2 rounded-xl text-sm">Cancel</button>
+          <button class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-5 py-2 rounded-xl text-sm">Save
+            Supplier</button>
         </div>
       </form>
     </div>
   </div>
 
-
-  <!-- =====================================================
-       OWNER PROFILE
-  ===================================================== -->
   <div id="ownerProfile" class="modal">
     <div class="modal-content">
       <div class="flex justify-between items-start">
         <div>
-          <h2 id="ownerNameDisplay" class="text-2xl font-bold text-gray-800"></h2>
-          <p id="ownerDebtDisplay" class="text-lg font-bold text-purple-700 mt-1"></p>
+          <h2 id="ownerNameDisplay" class="text-2xl font-black text-yellow-400"></h2>
+          <p id="ownerDebtDisplay" class="text-sm font-bold text-zinc-300 mt-1"></p>
         </div>
-        <button id="closeOwner" class="text-2xl font-bold text-gray-400 hover:text-gray-700 transition">✕</button>
+        <button id="closeOwner" class="text-zinc-500 hover:text-white text-2xl">✕</button>
       </div>
 
       <div class="grid sm:grid-cols-2 gap-3 mt-5">
         <div class="box">
-          <b>Phone</b>
-          <p id="ownerPhoneDisplay" class="text-gray-600"></p>
+          <b class="text-zinc-400 text-xs uppercase">Phone</b>
+          <p id="ownerPhoneDisplay" class="text-sm font-medium mt-1"></p>
         </div>
         <div class="box">
-          <b>Address</b>
-          <p id="ownerAddressDisplay" class="text-gray-600"></p>
+          <b class="text-zinc-400 text-xs uppercase">Address</b>
+          <p id="ownerAddressDisplay" class="text-sm font-medium mt-1"></p>
         </div>
         <div class="box">
-          <b>Products</b>
-          <p id="ownerProductsDisplay" class="text-gray-600"></p>
+          <b class="text-zinc-400 text-xs uppercase">Supplied Goods</b>
+          <p id="ownerProductsDisplay" class="text-sm font-medium mt-1"></p>
         </div>
         <div class="box">
-          <b>Total Bills</b>
-          <p id="ownerBillsTotal" class="text-gray-900 font-semibold"></p>
+          <b class="text-zinc-400 text-xs uppercase">Total Invoiced</b>
+          <p id="ownerBillsTotal" class="text-sm font-bold text-zinc-100 mt-1"></p>
         </div>
         <div class="box sm:col-span-2">
-          <b>Total Paid</b>
-          <p id="ownerPaidTotal" class="text-green-600 font-semibold"></p>
+          <b class="text-zinc-400 text-xs uppercase">Total Paid Out</b>
+          <p id="ownerPaidTotal" class="text-sm font-bold text-green-400 mt-1"></p>
         </div>
       </div>
 
-      <h3 class="text-lg font-bold mt-6 mb-2 text-gray-800">Bills</h3>
+      <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mt-6 mb-2">Invoices & Bills</h3>
       <div id="ownerBills" class="space-y-3"></div>
 
-      <h3 class="text-lg font-bold mt-6 mb-2 text-gray-800">Payment History</h3>
+      <h3 class="text-sm font-bold uppercase tracking-wider text-zinc-400 mt-6 mb-2">Disbursement History</h3>
       <div id="ownerPayments" class="space-y-3"></div>
 
       <div class="flex flex-wrap gap-2 mt-6">
-        <button id="addBill" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
-          + Add Bill
-        </button>
-        <button id="ownerPay" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
-          Pay Owner
-        </button>
+        <button id="addBill"
+          class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold text-xs px-4 py-2 rounded-xl transition">+ Add
+          New Bill / OCR</button>
+        <button id="ownerPay"
+          class="bg-green-500 hover:bg-green-400 text-black font-bold text-xs px-4 py-2 rounded-xl transition">Pay
+          Supplier (FIFO)</button>
       </div>
     </div>
   </div>
 
 
   <!-- =====================================================
-       ADD BILL
+       OCR / BILL UPLOAD MODAL
   ===================================================== -->
   <div id="billModal" class="modal">
     <div class="modal-content">
-      <h2 class="text-xl font-bold text-gray-800">Add Bill</h2>
-      <p class="text-gray-500 mb-5 text-sm">Upload PDF, photo, or enter details manually.</p>
+      <h2 class="text-xl font-bold text-yellow-400">Add Invoice / Bill</h2>
+      <p class="text-xs text-zinc-400 mb-4">Auto-extract details with built-in OCR or enter manually</p>
 
-      <form id="billForm">
-        <label class="font-bold text-sm text-gray-700">PDF</label>
-        <input id="pdfFile" type="file" accept="application/pdf,.pdf">
+      <form id="billForm" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-zinc-300">Upload Digital PDF</label>
+          <input id="pdfFile" type="file" accept="application/pdf,.pdf"
+            class="file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-yellow-400 file:text-black hover:file:bg-yellow-300">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-300">Upload Photo / Image OCR</label>
+          <input id="photoFile" type="file" accept="image/*"
+            class="file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-yellow-400 file:text-black hover:file:bg-yellow-300">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-300">Extracted Raw Text</label>
+          <textarea id="billText" placeholder="Extracted text will appear here..."></textarea>
+          <p id="readerStatus" class="text-yellow-400 text-xs mt-1 font-medium"></p>
+        </div>
 
-        <label class="font-bold block mt-4 text-sm text-gray-700">Photo</label>
-        <input id="photoFile" type="file" accept="image/*">
+        <hr class="border-zinc-800 my-4">
 
-        <label class="font-bold block mt-4 text-sm text-gray-700">Text Content</label>
-        <textarea id="billText" placeholder="Extracted bill text or paste text here"></textarea>
-
-        <p id="readerStatus" class="text-blue-600 text-sm mt-2 font-medium"></p>
-
-        <hr class="my-5 border-gray-200">
-
-        <label class="text-sm font-semibold text-gray-700">Owner Name</label>
-        <input id="billOwnerName" placeholder="Owner Name">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Amount YOU HAVE TO PAY (₹)</label>
-        <input id="billPayableAmount" type="number" min="0" required placeholder="Payable Amount">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Bill Date</label>
-        <input id="billDate" type="date" required>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Supplier Name</label>
+          <input id="billOwnerName" placeholder="Supplier Name">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Net Payable Amount (₹)</label>
+          <input id="billPayableAmount" type="number" min="0" required placeholder="₹ 0">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Bill Date</label>
+          <input id="billDate" type="date" required>
+        </div>
 
         <div class="flex justify-end gap-2 mt-6">
-          <button type="button" id="cancelBill" class="bg-gray-200 hover:bg-gray-300 px-5 py-2 rounded-lg transition">
-            Cancel
-          </button>
-          <button class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-lg transition">
-            Save
-          </button>
+          <button type="button" id="cancelBill"
+            class="bg-zinc-800 text-zinc-300 px-4 py-2 rounded-xl text-sm">Cancel</button>
+          <button class="bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-5 py-2 rounded-xl text-sm">Save
+            Invoice</button>
         </div>
       </form>
     </div>
   </div>
 
-
-  <!-- =====================================================
-       OWNER PAYMENT
-  ===================================================== -->
   <div id="ownerPayModal" class="modal">
     <div class="modal-content">
-      <h2 class="text-xl font-bold mb-4 text-gray-800">Pay Owner</h2>
-      <form id="ownerPayForm">
-        <label class="text-sm font-semibold text-gray-700">Amount Paid (₹)</label>
-        <input id="ownerPaymentAmount" type="number" min="0" required placeholder="Amount">
-
-        <label class="block mt-3 text-sm font-semibold text-gray-700">Paid Date</label>
-        <input id="ownerPaymentDate" type="date" required>
-
+      <h2 class="text-xl font-bold text-green-400 mb-4">Disburse Supplier Payment</h2>
+      <form id="ownerPayForm" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Amount Paid (₹)</label>
+          <input id="ownerPaymentAmount" type="number" min="0" required placeholder="₹ 0">
+        </div>
+        <div>
+          <label class="text-xs font-semibold text-zinc-400">Payment Date</label>
+          <input id="ownerPaymentDate" type="date" required>
+        </div>
         <div class="flex justify-end gap-2 mt-5">
-          <button type="button" id="cancelOwnerPay" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition">
-            Cancel
-          </button>
-          <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition">
-            Save Payment
-          </button>
+          <button type="button" id="cancelOwnerPay"
+            class="bg-zinc-800 text-zinc-300 px-4 py-2 rounded-xl text-sm">Cancel</button>
+          <button class="bg-green-500 hover:bg-green-400 text-black font-bold px-5 py-2 rounded-xl text-sm">Confirm
+            Disbursement</button>
         </div>
       </form>
     </div>
   </div>
 
-
-  <!-- =====================================================
-       BILL VIEWER
-  ===================================================== -->
   <div id="viewerModal" class="modal">
-    <div class="modal-content" style="max-width:1000px; height:90vh;">
+    <div class="modal-content" style="max-width:950px; height:88vh;">
       <div class="flex justify-between items-center mb-3">
-        <h2 id="viewerTitle" class="text-xl font-bold text-gray-800">Bill Viewer</h2>
-        <button id="closeViewer" class="text-2xl font-bold text-gray-400 hover:text-gray-700 transition">✕</button>
+        <h2 id="viewerTitle" class="text-base font-bold text-yellow-400">Invoice Document</h2>
+        <button id="closeViewer" class="text-zinc-500 hover:text-white text-2xl">✕</button>
       </div>
-      <div id="viewer" style="height:calc(100% - 50px); overflow:auto;" class="border rounded-lg bg-gray-50 flex items-center justify-center">
-      </div>
+      <div id="viewer" style="height:calc(100% - 40px); overflow:auto;"
+        class="border border-zinc-800 rounded-xl bg-black flex items-center justify-center"></div>
     </div>
   </div>
 
 
+  <!-- =====================================================
+       LOGIC ENGINE
+  ===================================================== -->
   <script>
-    /* =====================================================
-       WATER / CURSOR EFFECT
-    ===================================================== */
+    /* 1. MOUSE-TRACKING & EYE INTERACTION */
     const mouseGlow = document.getElementById("mouseGlow");
+    const skPupilL = document.getElementById("skPupilL");
+    const skPupilR = document.getElementById("skPupilR");
+    const skHead = document.getElementById("skHead");
+
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
     let currentX = mouseX;
     let currentY = mouseY;
 
-    document.addEventListener("mousemove", function (event) {
-      mouseX = event.clientX;
-      mouseY = event.clientY;
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+
+      // Update shopkeeper eye pupils & head rotation toward cursor
+      if (skPupilL && skPupilR && skHead) {
+        const svgBox = document.getElementById("shopkeeperSvg").getBoundingClientRect();
+        const headCenterX = svgBox.left + svgBox.width / 2;
+        const headCenterY = svgBox.top + svgBox.height / 2;
+
+        const deltaX = e.clientX - headCenterX;
+        const deltaY = e.clientY - headCenterY;
+        const angle = Math.atan2(deltaY, deltaX);
+        const distance = Math.min(4, Math.hypot(deltaX, deltaY) / 40);
+
+        const px = Math.cos(angle) * distance;
+        const py = Math.sin(angle) * distance;
+
+        skPupilL.setAttribute("cx", -16 + px);
+        skPupilL.setAttribute("cy", -2 + py);
+        skPupilR.setAttribute("cx", 16 + px);
+        skPupilR.setAttribute("cy", -2 + py);
+
+        const tilt = Math.max(-10, Math.min(10, deltaX / 50));
+        skHead.setAttribute("transform", `translate(120, 115) rotate(${tilt})`);
+      }
     });
 
-    function animateWaterCursor() {
+    function animateCursor() {
       currentX += (mouseX - currentX) * 0.08;
       currentY += (mouseY - currentY) * 0.08;
       mouseGlow.style.left = currentX + "px";
       mouseGlow.style.top = currentY + "px";
-      requestAnimationFrame(animateWaterCursor);
+      requestAnimationFrame(animateCursor);
     }
-    animateWaterCursor();
+    animateCursor();
 
-    let lastMouseX = mouseX;
-    let lastMouseY = mouseY;
-    document.addEventListener("mousemove", function () {
-      const speed = Math.sqrt(
-        Math.pow(mouseX - lastMouseX, 2) +
-        Math.pow(mouseY - lastMouseY, 2)
-      );
 
-      if (speed > 20) {
-        mouseGlow.style.width = "430px";
-        mouseGlow.style.height = "430px";
-      } else {
-        mouseGlow.style.width = "320px";
-        mouseGlow.style.height = "320px";
+    /* 2. AUTH & SESSION STORAGE */
+    const STORAGE_USERS = "khaata_shopkeepers_v1";
+    const STORAGE_SESSION = "khaata_active_session_v1";
+    let pendingOtp = null;
+    let pendingRegData = null;
+
+    function $(id) { return document.getElementById(id); }
+    function newId() { return Date.now() + "_" + Math.random().toString(36).substring(2); }
+    function today() { return new Date().toISOString().split("T")[0]; }
+    function money(n) { return Number(n || 0).toLocaleString("en-IN", { style: "currency", currency: "INR" }); }
+    function dateText(d) { return d ? new Date(d + "T00:00:00").toLocaleDateString("en-IN") : "—"; }
+
+    function openModal(x) { x.classList.add("show"); }
+    function closeModal(x) { x.classList.remove("show"); }
+
+    function getUsers() { return JSON.parse(localStorage.getItem(STORAGE_USERS) || "[]"); }
+    function saveUsers(u) { localStorage.setItem(STORAGE_USERS, JSON.stringify(u)); }
+    function getActiveSession() { return JSON.parse(localStorage.getItem(STORAGE_SESSION) || "null"); }
+    function setActiveSession(s) { localStorage.setItem(STORAGE_SESSION, JSON.stringify(s)); }
+
+    // Tab Switching
+    $("tabRegister").onclick = () => {
+      $("tabRegister").className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-yellow-400 text-black shadow";
+      $("tabLogin").className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-zinc-400 hover:text-white";
+      $("authRegisterForm").classList.remove("hidden");
+      $("authLoginForm").classList.add("hidden");
+      $("authOtpForm").classList.add("hidden");
+      $("otpAlertBanner").classList.add("hidden");
+    };
+
+    $("tabLogin").onclick = () => {
+      $("tabLogin").className = "flex-1 py-2 text-xs font-bold rounded-lg transition bg-yellow-400 text-black shadow";
+      $("tabRegister").className = "flex-1 py-2 text-xs font-bold rounded-lg transition text-zinc-400 hover:text-white";
+      $("authLoginForm").classList.remove("hidden");
+      $("authRegisterForm").classList.add("hidden");
+      $("authOtpForm").classList.add("hidden");
+      $("otpAlertBanner").classList.add("hidden");
+    };
+
+    // Phase 1: Submit Registration -> Send Simulated OTP
+    $("authRegisterForm").onsubmit = (e) => {
+      e.preventDefault();
+      const shopName = $("regShopName").value.trim();
+      const ownerName = $("regOwnerName").value.trim();
+      const email = $("regEmail").value.trim().toLowerCase();
+      const password = $("regPassword").value;
+
+      const users = getUsers();
+      if (users.some(u => u.email === email)) {
+        alert("This email is already registered. Please log in.");
+        $("tabLogin").click();
+        return;
       }
-      lastMouseX = mouseX;
-      lastMouseY = mouseY;
-    });
+
+      pendingOtp = Math.floor(1000 + Math.random() * 9000).toString();
+      pendingRegData = { id: newId(), shopName, ownerName, email, password };
+
+      $("mockOtpDisplay").textContent = pendingOtp;
+      $("otpAlertBanner").classList.remove("hidden");
+      $("authRegisterForm").classList.add("hidden");
+      $("authOtpForm").classList.remove("hidden");
+    };
+
+    $("backToRegBtn").onclick = () => {
+      $("authOtpForm").classList.add("hidden");
+      $("authRegisterForm").classList.remove("hidden");
+      $("otpAlertBanner").classList.add("hidden");
+    };
+
+    // Phase 1.5: Verify OTP
+    $("authOtpForm").onsubmit = (e) => {
+      e.preventDefault();
+      const enteredOtp = $("otpCodeInput").value.trim();
+
+      if (enteredOtp !== pendingOtp) {
+        alert("Invalid verification OTP. Please check the code.");
+        return;
+      }
+
+      const users = getUsers();
+      users.push(pendingRegData);
+      saveUsers(users);
+      setActiveSession(pendingRegData);
+
+      initDashboard(pendingRegData);
+    };
+
+    // Phase 2: Login
+    $("authLoginForm").onsubmit = (e) => {
+      e.preventDefault();
+      const email = $("loginEmail").value.trim().toLowerCase();
+      const password = $("loginPassword").value;
+
+      const users = getUsers();
+      const user = users.find(u => u.email === email && u.password === password);
+
+      if (!user) {
+        alert("Invalid email or password.");
+        return;
+      }
+
+      setActiveSession(user);
+      initDashboard(user);
+    };
+
+    $("logoutBtn").onclick = () => {
+      localStorage.removeItem(STORAGE_SESSION);
+      $("appDashboard").classList.add("hidden");
+      $("authView").classList.remove("hidden");
+    };
+
+    function initDashboard(user) {
+      $("authView").classList.add("hidden");
+      $("appDashboard").classList.remove("hidden");
+      $("headerShopTitle").textContent = user.shopName;
+      $("headerOwnerName").textContent = "Owner: " + user.ownerName;
+      renderBorrowers();
+      renderOwners();
+    }
 
 
-    /* =====================================================
-       STORAGE & UTILS
-    ===================================================== */
-    const BORROWERS = "borrowers_final_v3";
-    const OWNERS = "owners_final_v3";
+    /* 3. LEDGER STORAGE & CALCULATION (Per-Shop Scoped) */
+    function getLedgerKey(prefix) {
+      const session = getActiveSession();
+      return `${prefix}_${session ? session.id : 'default'}`;
+    }
+
+    function getBorrowers() { return JSON.parse(localStorage.getItem(getLedgerKey("borrowers")) || "[]"); }
+    function saveBorrowers(x) { localStorage.setItem(getLedgerKey("borrowers"), JSON.stringify(x)); }
+    function getOwners() { return JSON.parse(localStorage.getItem(getLedgerKey("owners")) || "[]"); }
+    function saveOwners(x) { localStorage.setItem(getLedgerKey("owners"), JSON.stringify(x)); }
+
     let currentBorrower = null;
     let currentOwner = null;
 
-    function $(id) {
-      return document.getElementById(id);
-    }
-
-    function newId() {
-      return Date.now() + "_" + Math.random().toString(36).substring(2);
-    }
-
-    function today() {
-      return new Date().toISOString().split("T")[0];
-    }
-
-    function money(n) {
-      return Number(n || 0).toLocaleString("en-IN", {
-        style: "currency",
-        currency: "INR"
-      });
-    }
-
-    function dateText(d) {
-      if (!d) return "—";
-      return new Date(d + "T00:00:00").toLocaleDateString("en-IN");
-    }
-
-    function openModal(x) {
-      x.classList.add("show");
-    }
-
-    function closeModal(x) {
-      x.classList.remove("show");
-    }
-
-    function getBorrowers() {
-      return JSON.parse(localStorage.getItem(BORROWERS) || "[]");
-    }
-
-    function saveBorrowers(x) {
-      localStorage.setItem(BORROWERS, JSON.stringify(x));
-    }
-
-    function getOwners() {
-      return JSON.parse(localStorage.getItem(OWNERS) || "[]");
-    }
-
-    function saveOwners(x) {
-      localStorage.setItem(OWNERS, JSON.stringify(x));
-    }
-
-
-    /* =====================================================
-       CALCULATIONS
-    ===================================================== */
     function borrowerTotals(b) {
-      let total = 0;
-      let paid = 0;
-      b.records.forEach(r => {
-        total += Number(r.amount || 0);
-        paid += Number(r.paid || 0);
-      });
-      return {
-        total,
-        paid,
-        remaining: Math.max(0, total - paid)
-      };
+      let total = 0, paid = 0;
+      b.records.forEach(r => { total += Number(r.amount || 0); paid += Number(r.paid || 0); });
+      return { total, paid, remaining: Math.max(0, total - paid) };
     }
 
     function ownerTotals(o) {
-      let total = 0;
-      let paid = 0;
-      o.bills.forEach(b => {
-        total += Number(b.amount || 0);
-        paid += Number(b.paid || 0);
-      });
-      return {
-        total,
-        paid,
-        remaining: Math.max(0, total - paid)
-      };
+      let total = 0, paid = 0;
+      o.bills.forEach(b => { total += Number(b.amount || 0); paid += Number(b.paid || 0); });
+      return { total, paid, remaining: Math.max(0, total - paid) };
     }
 
 
-    /* =====================================================
-       BORROWER DISPLAY (Portrait Layout)
-    ===================================================== */
+    /* 4. BORROWERS PORTRAIT RENDER */
     function renderBorrowers() {
       const grid = $("borrowerGrid");
       const data = getBorrowers();
       grid.innerHTML = "";
 
       if (!data.length) {
-        grid.innerHTML = `<p class="text-white/80 col-span-full py-4 text-center">No borrowers added yet.</p>`;
+        grid.innerHTML = `<p class="text-zinc-500 col-span-full py-8 text-center text-sm">No borrowers registered yet.</p>`;
         return;
       }
 
       data.forEach(b => {
         const t = borrowerTotals(b);
         const div = document.createElement("div");
-        div.className = "profile";
+        div.className = "profile-portrait";
 
         div.innerHTML = `
           <div>
-            <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg mx-auto mb-3 shadow-inner">
+            <div class="w-11 h-11 rounded-xl bg-yellow-400/10 text-yellow-400 border border-yellow-400/30 flex items-center justify-center font-black text-lg mx-auto mb-3 shadow">
               ${b.name.charAt(0).toUpperCase()}
             </div>
-            <h3 class="text-base font-bold text-gray-800 break-words line-clamp-2">
-              ${b.name}
-            </h3>
-            <p class="text-xs text-gray-500 mt-1">${b.phone || 'No phone'}</p>
+            <h3 class="text-sm font-bold text-zinc-100 break-words line-clamp-2">${b.name}</h3>
+            <p class="text-[11px] text-zinc-400 mt-1">${b.phone || 'No Phone'}</p>
           </div>
-
-          <div class="mt-4 pt-3 border-t border-gray-100">
-            <span class="text-xs uppercase tracking-wider text-gray-400 block font-semibold mb-1">Balance</span>
-            <p class="${t.remaining === 0 ? "completed" : "remaining"} text-sm">
+          <div class="mt-4 pt-3 border-t border-zinc-800">
+            <span class="text-[10px] uppercase tracking-wider text-zinc-500 block font-semibold mb-1">Due Amount</span>
+            <p class="${t.remaining === 0 ? "completed" : "remaining"} text-xs">
               ${t.remaining === 0 ? "✓ Cleared" : money(t.remaining)}
             </p>
           </div>
         `;
 
-        div.onclick = () => {
-          currentBorrower = b.id;
-          showBorrower();
-        };
-
+        div.onclick = () => { currentBorrower = b.id; showBorrower(); };
         grid.appendChild(div);
       });
     }
 
-
-    /* =====================================================
-       BORROWER FORM
-    ===================================================== */
-    function openBorrowerForm() {
-      $("borrowerForm").reset();
-      $("borrowerDate").value = today();
-      openModal($("borrowerModal"));
-    }
-
-    $("addBorrower").onclick = openBorrowerForm;
-    $("headerBorrower").onclick = openBorrowerForm;
+    $("addBorrower").onclick = () => { $("borrowerForm").reset(); $("borrowerDate").value = today(); openModal($("borrowerModal")); };
+    $("headerBorrower").onclick = () => { $("borrowerForm").reset(); $("borrowerDate").value = today(); openModal($("borrowerModal")); };
     $("cancelBorrower").onclick = () => closeModal($("borrowerModal"));
 
-    $("borrowerForm").onsubmit = function (e) {
+    $("borrowerForm").onsubmit = (e) => {
       e.preventDefault();
       const data = getBorrowers();
-
       data.push({
         id: newId(),
         name: $("borrowerName").value.trim(),
         phone: $("borrowerPhone").value.trim(),
         address: $("borrowerAddress").value.trim(),
-        records: [{
-          id: newId(),
-          amount: Number($("borrowerAmount").value),
-          date: $("borrowerDate").value,
-          paid: 0,
-          paidDate: null
-        }]
+        records: [{ id: newId(), amount: Number($("borrowerAmount").value), date: $("borrowerDate").value, paid: 0, paidDate: null }]
       });
-
       saveBorrowers(data);
       closeModal($("borrowerModal"));
       renderBorrowers();
     };
 
-
-    /* =====================================================
-       BORROWER PROFILE
-    ===================================================== */
     function showBorrower() {
       const b = getBorrowers().find(x => x.id === currentBorrower);
       if (!b) return;
@@ -889,7 +984,7 @@
       $("borrowerPaidTotal").textContent = money(t.paid);
       $("borrowerRemaining").textContent = money(t.remaining);
 
-      $("borrowerStatus").textContent = t.remaining === 0 ? "✓ Completed" : money(t.remaining) + " Remaining";
+      $("borrowerStatus").textContent = t.remaining === 0 ? "✓ Cleared" : money(t.remaining) + " Remaining";
       $("borrowerStatus").className = t.remaining === 0 ? "completed" : "remaining";
 
       const history = $("borrowerHistory");
@@ -899,26 +994,23 @@
         const remaining = Math.max(0, Number(r.amount) - Number(r.paid || 0));
         const div = document.createElement("div");
         div.className = "item";
-
         div.innerHTML = `
           <div class="flex justify-between items-center mb-1">
-            <b class="text-gray-900">${money(r.amount)}</b>
-            <span class="${remaining === 0 ? "completed text-xs" : "remaining text-xs"}">
-              ${remaining === 0 ? "✓ Paid" : money(remaining) + " Due"}
-            </span>
+            <b class="text-zinc-100 text-sm">${money(r.amount)}</b>
+            <span class="${remaining === 0 ? "completed text-xs" : "remaining text-xs"}">${remaining === 0 ? "✓ Paid" : money(remaining) + " Due"}</span>
           </div>
-          <p class="text-xs text-gray-500">Taken: ${dateText(r.date)} | Returned: ${money(r.paid)}</p>
-          ${r.paidDate ? `<p class="text-xs text-green-600 mt-1">Paid Date: ${dateText(r.paidDate)}</p>` : ""}
+          <p class="text-[11px] text-zinc-400">Date: ${dateText(r.date)} | Paid: ${money(r.paid)}</p>
+          ${r.paidDate ? `<p class="text-[11px] text-green-400 mt-1">Settled On: ${dateText(r.paidDate)}</p>` : ""}
         `;
         history.appendChild(div);
       });
 
-      $("borrowerExtra").textContent = t.remaining === 0 ? "✓ Fully settled" : "Remaining amount: " + money(t.remaining);
-      $("borrowerExtra").className = t.remaining === 0 ? "completed font-bold mt-5" : "remaining font-bold mt-5";
+      $("borrowerExtra").textContent = t.remaining === 0 ? "✓ Customer balance fully settled" : "Pending collection: " + money(t.remaining);
+      $("borrowerExtra").className = t.remaining === 0 ? "completed mt-4 text-xs font-bold" : "remaining mt-4 text-xs font-bold";
 
       if (b.shopCredit) {
-        $("borrowerExtra").textContent = "✓ Completed — Advance balance: " + money(b.shopCredit);
-        $("borrowerExtra").className = "completed font-bold mt-5";
+        $("borrowerExtra").textContent = "✓ Advance credit available: " + money(b.shopCredit);
+        $("borrowerExtra").className = "completed mt-4 text-xs font-bold";
       }
 
       openModal($("borrowerProfile"));
@@ -926,51 +1018,26 @@
 
     $("closeBorrower").onclick = () => closeModal($("borrowerProfile"));
 
-
-    /* =====================================================
-       BORROWER ADD AMOUNT
-    ===================================================== */
-    $("borrowerAdd").onclick = () => {
-      $("borrowerAddForm").reset();
-      $("newBorrowDate").value = today();
-      openModal($("borrowerAddModal"));
-    };
-
+    $("borrowerAdd").onclick = () => { $("borrowerAddForm").reset(); $("newBorrowDate").value = today(); openModal($("borrowerAddModal")); };
     $("cancelBorrowerAdd").onclick = () => closeModal($("borrowerAddModal"));
 
-    $("borrowerAddForm").onsubmit = function (e) {
+    $("borrowerAddForm").onsubmit = (e) => {
       e.preventDefault();
       const data = getBorrowers();
       const b = data.find(x => x.id === currentBorrower);
       if (!b) return;
 
-      b.records.push({
-        id: newId(),
-        amount: Number($("newBorrowAmount").value),
-        date: $("newBorrowDate").value,
-        paid: 0,
-        paidDate: null
-      });
-
+      b.records.push({ id: newId(), amount: Number($("newBorrowAmount").value), date: $("newBorrowDate").value, paid: 0, paidDate: null });
       saveBorrowers(data);
       closeModal($("borrowerAddModal"));
       renderBorrowers();
       showBorrower();
     };
 
-
-    /* =====================================================
-       BORROWER PAYMENT
-    ===================================================== */
-    $("borrowerPay").onclick = () => {
-      $("borrowerPayForm").reset();
-      $("borrowerReturnDate").value = today();
-      openModal($("borrowerPayModal"));
-    };
-
+    $("borrowerPay").onclick = () => { $("borrowerPayForm").reset(); $("borrowerReturnDate").value = today(); openModal($("borrowerPayModal")); };
     $("cancelBorrowerPay").onclick = () => closeModal($("borrowerPayModal"));
 
-    $("borrowerPayForm").onsubmit = function (e) {
+    $("borrowerPayForm").onsubmit = (e) => {
       e.preventDefault();
       let amount = Number($("borrowerReturnAmount").value);
       const date = $("borrowerReturnDate").value;
@@ -1000,69 +1067,50 @@
     };
 
 
-    /* =====================================================
-       OWNER DISPLAY (Portrait Layout)
-    ===================================================== */
+    /* 5. OWNERS / SUPPLIERS PORTRAIT RENDER */
     function renderOwners() {
       const grid = $("ownerGrid");
       const data = getOwners();
       grid.innerHTML = "";
 
       if (!data.length) {
-        grid.innerHTML = `<p class="text-white/80 col-span-full py-4 text-center">No owners or suppliers added yet.</p>`;
+        grid.innerHTML = `<p class="text-zinc-500 col-span-full py-8 text-center text-sm">No suppliers registered yet.</p>`;
         return;
       }
 
       data.forEach(o => {
         const t = ownerTotals(o);
         const div = document.createElement("div");
-        div.className = "profile";
+        div.className = "profile-portrait";
 
         div.innerHTML = `
           <div>
-            <div class="w-12 h-12 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-lg mx-auto mb-3 shadow-inner">
+            <div class="w-11 h-11 rounded-xl bg-zinc-800 text-yellow-400 border border-zinc-700 flex items-center justify-center font-black text-lg mx-auto mb-3 shadow">
               ${o.name.charAt(0).toUpperCase()}
             </div>
-            <h3 class="text-base font-bold text-gray-800 break-words line-clamp-2">
-              ${o.name}
-            </h3>
-            <p class="text-xs text-gray-500 mt-1 line-clamp-1">${o.products || 'Supplier'}</p>
+            <h3 class="text-sm font-bold text-zinc-100 break-words line-clamp-2">${o.name}</h3>
+            <p class="text-[11px] text-zinc-400 mt-1 line-clamp-1">${o.products || 'Wholesale Supplier'}</p>
           </div>
-
-          <div class="mt-4 pt-3 border-t border-gray-100">
-            <span class="text-xs uppercase tracking-wider text-gray-400 block font-semibold mb-1">To Pay</span>
-            <p class="${t.remaining === 0 ? "completed" : "remaining"} text-sm">
+          <div class="mt-4 pt-3 border-t border-zinc-800">
+            <span class="text-[10px] uppercase tracking-wider text-zinc-500 block font-semibold mb-1">Payable</span>
+            <p class="${t.remaining === 0 ? "completed" : "remaining"} text-xs">
               ${t.remaining === 0 ? "✓ Cleared" : money(t.remaining)}
             </p>
           </div>
         `;
 
-        div.onclick = () => {
-          currentOwner = o.id;
-          showOwner();
-        };
-
+        div.onclick = () => { currentOwner = o.id; showOwner(); };
         grid.appendChild(div);
       });
     }
 
-
-    /* =====================================================
-       OWNER FORM
-    ===================================================== */
-    function openOwnerForm() {
-      $("ownerForm").reset();
-      openModal($("ownerModal"));
-    }
-
-    $("addOwner").onclick = openOwnerForm;
-    $("headerOwner").onclick = openOwnerForm;
+    $("addOwner").onclick = () => { $("ownerForm").reset(); openModal($("ownerModal")); };
+    $("headerOwner").onclick = () => { $("ownerForm").reset(); openModal($("ownerModal")); };
     $("cancelOwner").onclick = () => closeModal($("ownerModal"));
 
-    $("ownerForm").onsubmit = function (e) {
+    $("ownerForm").onsubmit = (e) => {
       e.preventDefault();
       const data = getOwners();
-
       data.push({
         id: newId(),
         name: $("ownerName").value.trim(),
@@ -1072,23 +1120,18 @@
         bills: [],
         payments: []
       });
-
       saveOwners(data);
       closeModal($("ownerModal"));
       renderOwners();
     };
 
-
-    /* =====================================================
-       OWNER PROFILE
-    ===================================================== */
     function showOwner() {
       const o = getOwners().find(x => x.id === currentOwner);
       if (!o) return;
 
       const t = ownerTotals(o);
       $("ownerNameDisplay").textContent = o.name;
-      $("ownerDebtDisplay").textContent = t.remaining === 0 ? "✓ Completed" : money(t.remaining) + " to pay";
+      $("ownerDebtDisplay").textContent = t.remaining === 0 ? "✓ Cleared" : money(t.remaining) + " to pay";
       $("ownerPhoneDisplay").textContent = o.phone || "—";
       $("ownerAddressDisplay").textContent = o.address || "—";
       $("ownerProductsDisplay").textContent = o.products || "—";
@@ -1097,40 +1140,29 @@
 
       const bills = $("ownerBills");
       bills.innerHTML = "";
-
-      if (!o.bills.length) {
-        bills.innerHTML = `<p class="text-gray-400 text-sm">No bills added.</p>`;
-      }
+      if (!o.bills.length) bills.innerHTML = `<p class="text-zinc-500 text-xs">No invoices attached.</p>`;
 
       o.bills.forEach(b => {
         const remaining = Math.max(0, Number(b.amount) - Number(b.paid || 0));
         const div = document.createElement("div");
         div.className = "item";
-
         div.innerHTML = `
           <div class="flex justify-between items-center mb-1">
-            <b class="text-gray-900">${money(b.amount)}</b>
-            <span class="${remaining === 0 ? "completed text-xs" : "remaining text-xs"}">
-              ${remaining === 0 ? "✓ Completed" : money(remaining) + " Due"}
-            </span>
+            <b class="text-zinc-100 text-sm">${money(b.amount)}</b>
+            <span class="${remaining === 0 ? "completed text-xs" : "remaining text-xs"}">${remaining === 0 ? "✓ Completed" : money(remaining) + " Due"}</span>
           </div>
-          <p class="text-xs text-gray-500">Date: ${dateText(b.date)} | Paid: ${money(b.paid)}</p>
-          ${b.paidDate ? `<p class="text-xs text-green-600 mt-1">Paid Date: ${dateText(b.paidDate)}</p>` : ""}
-          ${b.fileKey ? `<button class="viewFile bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-md mt-3 transition">View Attached Bill</button>` : ""}
+          <p class="text-[11px] text-zinc-400">Date: ${dateText(b.date)} | Paid: ${money(b.paid)}</p>
+          ${b.fileKey ? `<button class="viewFile bg-yellow-400 hover:bg-yellow-300 text-black text-[11px] font-bold px-3 py-1 rounded-md mt-2">View Document</button>` : ""}
         `;
 
-        const button = div.querySelector(".viewFile");
-        if (button) {
-          button.onclick = async () => {
+        const btn = div.querySelector(".viewFile");
+        if (btn) {
+          btn.onclick = async () => {
             const file = await getFile(b.fileKey);
-            if (!file) {
-              alert("Original bill file not found.");
-              return;
-            }
-
+            if (!file) { alert("Document file not found."); return; }
             const url = URL.createObjectURL(file);
             $("viewer").innerHTML = "";
-            $("viewerTitle").textContent = b.fileName || "Bill";
+            $("viewerTitle").textContent = b.fileName || "Invoice";
 
             if (file.type === "application/pdf") {
               const frame = document.createElement("iframe");
@@ -1144,30 +1176,22 @@
               img.src = url;
               img.style.maxHeight = "100%";
               img.style.maxWidth = "100%";
-              img.style.objectFit = "contain";
               $("viewer").appendChild(img);
             }
-
             openModal($("viewerModal"));
           };
         }
-
         bills.appendChild(div);
       });
 
       const payments = $("ownerPayments");
       payments.innerHTML = "";
-      if (!o.payments.length) {
-        payments.innerHTML = `<p class="text-gray-400 text-sm">No payments recorded.</p>`;
-      }
+      if (!o.payments.length) payments.innerHTML = `<p class="text-zinc-500 text-xs">No payments recorded.</p>`;
 
       o.payments.forEach(p => {
         const div = document.createElement("div");
         div.className = "item";
-        div.innerHTML = `
-          <b>${money(p.amount)}</b>
-          <p class="text-xs text-gray-500 mt-1">Paid Date: ${dateText(p.date)}</p>
-        `;
+        div.innerHTML = `<b>${money(p.amount)}</b><p class="text-[11px] text-zinc-400 mt-1">Date: ${dateText(p.date)}</p>`;
         payments.appendChild(div);
       });
 
@@ -1177,274 +1201,140 @@
     $("closeOwner").onclick = () => closeModal($("ownerProfile"));
 
 
-    /* =====================================================
-       INDEXED DB FOR BILL STORAGE
-    ===================================================== */
-    const DB_NAME = "LedgerFilesV3";
+    /* 6. INDEXED DB BINARY STORAGE */
+    const DB_NAME = "KhaataProFilesV3";
     const STORE = "files";
 
     function openDB() {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 1);
-        request.onupgradeneeded = () => {
-          const db = request.result;
-          if (!db.objectStoreNames.contains(STORE)) {
-            db.createObjectStore(STORE);
-          }
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
         };
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
       });
     }
 
     function saveFile(key, file) {
-      return openDB().then(db => {
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction(STORE, "readwrite");
-          tx.objectStore(STORE).put(file, key);
-          tx.oncomplete = resolve;
-          tx.onerror = () => reject(tx.error);
-        });
-      });
+      return openDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).put(file, key);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      }));
     }
 
     function getFile(key) {
-      return openDB().then(db => {
-        return new Promise((resolve, reject) => {
-          const tx = db.transaction(STORE, "readonly");
-          const request = tx.objectStore(STORE).get(key);
-          request.onsuccess = () => resolve(request.result);
-          request.onerror = () => reject(request.error);
-        });
-      });
+      return openDB().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE, "readonly");
+        const req = tx.objectStore(STORE).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      }));
     }
 
 
-    /* =====================================================
-       SMART AMOUNT & DATE PARSING
-    ===================================================== */
-    function extractAmount(value) {
-      if (!value) return null;
-      return Number(value.replace(/[₹$€£]/g, "").replace(/,/g, "").trim());
+    /* 7. OCR & PARSING */
+    function extractAmount(val) {
+      if (!val) return null;
+      return Number(val.replace(/[₹$€£]/g, "").replace(/,/g, "").trim());
     }
 
     function findPayableAmount(text) {
       if (!text) return null;
-
-      const currentPatterns = [
+      const patterns = [
         /current\s*balance\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /current\s*bal(?:ance)?\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /outstanding\s*balance\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /outstanding\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
-      ];
-
-      for (const pattern of currentPatterns) {
-        const match = text.match(pattern);
-        if (match) return extractAmount(match[1]);
-      }
-
-      const balancePatterns = [
+        /outstanding\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
         /balance\s*due\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /amount\s*due\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /due\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /balance\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
-      ];
-
-      for (const pattern of balancePatterns) {
-        const match = text.match(pattern);
-        if (match) return extractAmount(match[1]);
-      }
-
-      const payablePatterns = [
-        /net\s*payable\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
         /amount\s*payable\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /payable\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /final\s*payable\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
-      ];
-
-      for (const pattern of payablePatterns) {
-        const match = text.match(pattern);
-        if (match) return extractAmount(match[1]);
-      }
-
-      let total = null;
-      let paid = null;
-      const lines = text.replace(/\r/g, "\n").split("\n").map(x => x.trim()).filter(Boolean);
-
-      for (const line of lines) {
-        let match = line.match(/(?:grand\s*total|total\s*amount|total)\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i);
-        if (match && total === null) total = extractAmount(match[1]);
-
-        match = line.match(/(?:paid|amount\s*paid|received)\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i);
-        if (match && paid === null) paid = extractAmount(match[1]);
-      }
-
-      if (total !== null && paid !== null) {
-        return Math.max(0, total - paid);
-      }
-
-      const finalPatterns = [
-        /final\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
         /grand\s*total\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
-        /net\s*amount\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
+        /total\s*[:\-]?\s*(?:₹|rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i
       ];
-
-      for (const pattern of finalPatterns) {
-        const match = text.match(pattern);
-        if (match) return extractAmount(match[1]);
+      for (const p of patterns) {
+        const m = text.match(p);
+        if (m) return extractAmount(m[1]);
       }
-
       return null;
     }
 
     function extractBillDetails(text) {
       if (!text) return;
-
       const payable = findPayableAmount(text);
-      if (payable !== null) {
-        $("billPayableAmount").value = payable;
-      }
+      if (payable !== null) $("billPayableAmount").value = payable;
 
       const dateMatch = text.match(/(?:bill\s*date|invoice\s*date|date)\s*[:\-]?\s*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})/i);
       if (dateMatch) {
         const p = dateMatch[1].split(/[\/\-]/);
-        let d = p[0];
-        let m = p[1];
-        let y = p[2];
+        let d = p[0], m = p[1], y = p[2];
         if (y.length === 2) y = "20" + y;
         $("billDate").value = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
       }
-
-      const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
-      const ignored = /^(invoice|tax invoice|invoice no|invoice number|bill|bill no|date|total|grand total|amount|gst|cgst|sgst|phone|mobile|address|paid|received|balance|amount due|net payable)$/i;
-
-      for (const line of lines) {
-        if (line.length > 2 && line.length < 100 && !ignored.test(line) && !/^\d+$/.test(line) && !/^[₹$€£]?\s*[\d,.]+$/.test(line)) {
-          $("billOwnerName").value = line;
-          break;
-        }
-      }
     }
 
-
-    /* =====================================================
-       OCR & PDF HANDLERS
-    ===================================================== */
     $("photoFile").onchange = async function () {
       const file = this.files[0];
       if (!file) return;
-
       $("pdfFile").value = "";
-      $("readerStatus").textContent = "Reading photo with OCR...";
+      $("readerStatus").textContent = "Running Tesseract OCR...";
 
       try {
-        const result = await Tesseract.recognize(file, "eng");
-        const text = result.data.text;
+        const res = await Tesseract.recognize(file, "eng");
+        const text = res.data.text;
         $("billText").value = text;
         extractBillDetails(text);
-        $("readerStatus").textContent = "Photo read complete. Please review extracted fields.";
+        $("readerStatus").textContent = "OCR processing complete.";
       } catch (e) {
-        console.error(e);
-        $("readerStatus").textContent = "Could not read photo. Enter details manually.";
+        $("readerStatus").textContent = "Could not parse image.";
       }
     };
 
     $("pdfFile").onchange = async function () {
       const file = this.files[0];
       if (!file) return;
-
       $("photoFile").value = "";
-      $("readerStatus").textContent = "Reading PDF...";
+      $("readerStatus").textContent = "Reading PDF content...";
 
       try {
         const buffer = await file.arrayBuffer();
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
         let text = "";
-
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
           text += content.items.map(x => x.str).join(" ") + "\n";
         }
-
-        if (text.trim().length > 20) {
-          $("billText").value = text;
-          extractBillDetails(text);
-          $("readerStatus").textContent = "PDF read successfully. Please review details.";
-          return;
-        }
-
-        $("readerStatus").textContent = "Scanned PDF detected. Reading with OCR...";
-        let ocrText = "";
-        const pages = Math.min(pdf.numPages, 10);
-
-        for (let i = 1; i <= pages; i++) {
-          const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 1.5 });
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-
-          await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-          const result = await Tesseract.recognize(canvas, "eng");
-          ocrText += result.data.text + "\n";
-        }
-
-        $("billText").value = ocrText;
-        extractBillDetails(ocrText);
-        $("readerStatus").textContent = "Scanned PDF processed. Check fields.";
+        $("billText").value = text;
+        extractBillDetails(text);
+        $("readerStatus").textContent = "PDF processed successfully.";
       } catch (e) {
-        console.error(e);
-        $("readerStatus").textContent = "PDF could not be parsed automatically. Enter details manually.";
+        $("readerStatus").textContent = "Could not parse PDF.";
       }
     };
 
+    $("addBill").onclick = () => { $("billForm").reset(); $("billDate").value = today(); $("readerStatus").textContent = ""; openModal($("billModal")); };
+    $("cancelBill").onclick = () => closeModal($("billModal"));
 
-    /* =====================================================
-       ADD BILL ACTIONS
-    ===================================================== */
-    $("addBill").onclick = () => {
-      $("billForm").reset();
-      $("billDate").value = today();
-      $("readerStatus").textContent = "";
-      openModal($("billModal"));
-    };
-
-    $("cancelBill").onclick = () => {
-      $("billForm").reset();
-      closeModal($("billModal"));
-    };
-
-    $("billForm").onsubmit = async function (e) {
+    $("billForm").onsubmit = async (e) => {
       e.preventDefault();
       const pdf = $("pdfFile").files[0];
       const photo = $("photoFile").files[0];
       const text = $("billText").value.trim();
 
-      if (!pdf && !photo && !text) {
-        alert("Please upload a PDF, photo, or enter bill text.");
-        return;
-      }
+      if (!pdf && !photo && !text) { alert("Please provide a file or invoice text."); return; }
 
       const data = getOwners();
       const owner = data.find(x => x.id === currentOwner);
       if (!owner) return;
 
-      if (text) extractBillDetails(text);
-
       const amount = Number($("billPayableAmount").value);
-      if (amount <= 0) {
-        alert("Please enter a valid amount to pay.");
-        return;
-      }
+      if (amount <= 0) { alert("Enter a valid payable amount."); return; }
 
-      let file = pdf || photo || null;
+      const file = pdf || photo || null;
       const billId = newId();
 
-      if (file) {
-        await saveFile(billId, file);
-      }
+      if (file) await saveFile(billId, file);
 
       owner.bills.push({
         id: billId,
@@ -1458,26 +1348,14 @@
       });
 
       saveOwners(data);
-      $("billForm").reset();
       closeModal($("billModal"));
       renderOwners();
       showOwner();
     };
 
-
-    /* =====================================================
-       OWNER PAYMENT ACTIONS
-    ===================================================== */
     $("ownerPay").onclick = () => {
       const o = getOwners().find(x => x.id === currentOwner);
-      if (!o) return;
-
-      const t = ownerTotals(o);
-      if (t.remaining <= 0) {
-        alert("This owner has no remaining balance to pay.");
-        return;
-      }
-
+      if (!o || ownerTotals(o).remaining <= 0) { alert("No remaining balance to disburse."); return; }
       $("ownerPayForm").reset();
       $("ownerPaymentDate").value = today();
       openModal($("ownerPayModal"));
@@ -1485,7 +1363,7 @@
 
     $("cancelOwnerPay").onclick = () => closeModal($("ownerPayModal"));
 
-    $("ownerPayForm").onsubmit = function (e) {
+    $("ownerPayForm").onsubmit = (e) => {
       e.preventDefault();
       let amount = Number($("ownerPaymentAmount").value);
       const date = $("ownerPaymentDate").value;
@@ -1504,33 +1382,21 @@
         amount -= used;
       }
 
-      o.payments.push({
-        id: newId(),
-        amount: Number($("ownerPaymentAmount").value),
-        date: date
-      });
-
+      o.payments.push({ id: newId(), amount: Number($("ownerPaymentAmount").value), date });
       saveOwners(data);
       closeModal($("ownerPayModal"));
       renderOwners();
       showOwner();
     };
 
-
-    /* =====================================================
-       BILL VIEWER
-    ===================================================== */
-    $("closeViewer").onclick = () => {
-      closeModal($("viewerModal"));
-      $("viewer").innerHTML = "";
-    };
+    $("closeViewer").onclick = () => { closeModal($("viewerModal")); $("viewer").innerHTML = ""; };
 
 
-    /* =====================================================
-       INITIAL RENDER
-    ===================================================== */
-    renderBorrowers();
-    renderOwners();
+    /* 8. RESTORE ACTIVE SESSION ON LOAD */
+    const active = getActiveSession();
+    if (active) {
+      initDashboard(active);
+    }
   </script>
 
 </body>
