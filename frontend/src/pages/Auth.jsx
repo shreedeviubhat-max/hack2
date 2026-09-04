@@ -25,8 +25,8 @@ export default function Auth() {
     setLoading(true);
 
     const endpoint = isLogin
-      ? 'http://localhost:5000/api/auth/login'
-      : 'http://localhost:5000/api/auth/register';
+      ? '/api/auth/login'
+      : '/api/auth/register';
 
     const payload = isLogin
       ? { phoneNumber: formData.phoneNumber, password: formData.password }
