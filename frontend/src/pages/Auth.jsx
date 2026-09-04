@@ -58,7 +58,7 @@ export default function Auth() {
       }
     } catch (err) {
       console.error('API error:', err);
-      setErrorMsg('Cannot connect to backend server. Make sure port 5000 is active.');
+      setErrorMsg(err.message || 'Server connection failed. Please check network.');
     } finally {
       setLoading(false);
     }
@@ -83,17 +83,27 @@ export default function Auth() {
           <div className="flex mb-8 border-b border-[#27272a]">
             <button
               type="button"
-              className={`flex-1 pb-4 text-lg font-medium transition-colors ${isLogin ? 'text-accent-light border-b-2 border-accent-light' : 'text-text-muted hover:text-white'
+              className={`flex-1 pb-4 text-lg font-medium transition-colors ${isLogin
+                ? 'text-accent-light border-b-2 border-accent-light'
+                : 'text-text-muted hover:text-white'
                 }`}
-              onClick={() => { setIsLogin(true); setErrorMsg(''); }}
+              onClick={() => {
+                setIsLogin(true);
+                setErrorMsg('');
+              }}
             >
               Log In
             </button>
             <button
               type="button"
-              className={`flex-1 pb-4 text-lg font-medium transition-colors ${!isLogin ? 'text-accent-light border-b-2 border-accent-light' : 'text-text-muted hover:text-white'
+              className={`flex-1 pb-4 text-lg font-medium transition-colors ${!isLogin
+                ? 'text-accent-light border-b-2 border-accent-light'
+                : 'text-text-muted hover:text-white'
                 }`}
-              onClick={() => { setIsLogin(false); setErrorMsg(''); }}
+              onClick={() => {
+                setIsLogin(false);
+                setErrorMsg('');
+              }}
             >
               Register Shop
             </button>
@@ -109,7 +119,9 @@ export default function Auth() {
             {!isLogin && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-text-muted mb-2">Shop Name</label>
+                  <label className="block text-sm font-medium text-text-muted mb-2">
+                    Shop Name
+                  </label>
                   <input
                     type="text"
                     name="shopName"
@@ -121,7 +133,9 @@ export default function Auth() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-muted mb-2">Full Name</label>
+                  <label className="block text-sm font-medium text-text-muted mb-2">
+                    Full Name
+                  </label>
                   <input
                     type="text"
                     name="ownerFullName"
@@ -136,7 +150,9 @@ export default function Auth() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-text-muted mb-2">Phone Number</label>
+              <label className="block text-sm font-medium text-text-muted mb-2">
+                Phone Number
+              </label>
               <input
                 type="tel"
                 name="phoneNumber"
@@ -147,9 +163,10 @@ export default function Auth() {
                 required
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-text-muted mb-2">Password</label>
+              <label className="block text-sm font-medium text-text-muted mb-2">
+                Password
+              </label>
               <input
                 type="password"
                 name="password"
@@ -166,7 +183,11 @@ export default function Auth() {
               disabled={loading}
               className="w-full py-4 bg-accent-light text-background font-bold rounded hover:bg-accent-dark transition-colors disabled:opacity-50"
             >
-              {loading ? 'Processing...' : isLogin ? 'Login to Portal' : 'Register Shop'}
+              {loading
+                ? 'Processing...'
+                : isLogin
+                  ? 'Login to Portal'
+                  : 'Register Shop'}
             </button>
           </form>
         </div>
@@ -174,4 +195,4 @@ export default function Auth() {
       </div>
     </div>
   );
-} 
+}
