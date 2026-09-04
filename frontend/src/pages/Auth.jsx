@@ -5,7 +5,6 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const { setUser } = useContext(AuthContext);
 
-  // Form input state
   const [formData, setFormData] = useState({
     shopName: '',
     ownerFullName: '',
@@ -24,10 +23,7 @@ export default function Auth() {
     setErrorMsg('');
     setLoading(true);
 
-    const endpoint = isLogin
-      ? '/api/auth/login'
-      : '/api/auth/register';
-
+    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
     const payload = isLogin
       ? { phoneNumber: formData.phoneNumber, password: formData.password }
       : formData;
@@ -39,6 +35,13 @@ export default function Auth() {
         body: JSON.stringify(payload),
       });
 
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const rawText = await res.text();
+        console.error('Non-JSON response received:', rawText);
+        throw new Error(`Server returned status ${res.status}. Backend endpoint not reached.`);
+      }
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -48,7 +51,6 @@ export default function Auth() {
       }
 
       if (isLogin) {
-        // Save session credentials
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);
@@ -58,7 +60,7 @@ export default function Auth() {
       }
     } catch (err) {
       console.error('API error:', err);
-      setErrorMsg(err.message || 'Server connection failed. Please check network.');
+      setErrorMsg(err.message || 'Connection failed.');
     } finally {
       setLoading(false);
     }
@@ -67,8 +69,6 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-4xl flex flex-col md:flex-row bg-[#121214] rounded-xl overflow-hidden shadow-2xl border border-[#27272a]">
-
-        {/* Left Media Card Placeholder */}
         <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-8 border-r border-[#27272a]">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-accent-light mb-2">
@@ -78,7 +78,6 @@ export default function Auth() {
           </div>
         </div>
 
-        {/* Right Form Card */}
         <div className="w-full md:w-1/2 p-8">
           <div className="flex mb-8 border-b border-[#27272a]">
             <button
@@ -191,7 +190,6 @@ export default function Auth() {
             </button>
           </form>
         </div>
-
       </div>
     </div>
   );
