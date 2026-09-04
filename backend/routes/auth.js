@@ -4,16 +4,18 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
-
-// Register
+// Register Shop Owner
 router.post('/register', async (req, res) => {
   try {
     const { shopName, ownerFullName, phoneNumber, password } = req.body;
 
+    if (!shopName || !ownerFullName || !phoneNumber || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
     const existingUser = await User.findOne({ phoneNumber });
     if (existingUser) {
-      return res.status(400).json({ message: 'User with this phone number already exists' });
+      return res.status(400).json({ message: 'Phone number already registered' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -23,40 +25,52 @@ router.post('/register', async (req, res) => {
       shopName,
       ownerFullName,
       phoneNumber,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     await newUser.save();
-    
-    // Auto login after register
-    const token = jwt.sign({ id: newUser._id }, JWT_SECRET, { expiresIn: '1d' });
-
-    res.status(201).json({ token, user: { id: newUser._id, shopName, ownerFullName, phoneNumber } });
+    res.status(201).json({ message: 'Shop registered successfully' });
   } catch (err) {
-    res.status(500).json({ message: 'Server Error', error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Login
+// Login via Phone Number & Password
 router.post('/login', async (req, res) => {
   try {
     const { phoneNumber, password } = req.body;
 
+    if (!phoneNumber || !password) {
+      return res.status(400).json({ message: 'Phone number and password are required' });
+    }
+
     const user = await User.findOne({ phoneNumber });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid phone number or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: 'Invalid phone number or password' });
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign(
+      { userId: user._id, shopName: user.shopName },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '7d' }
+    );
 
-    res.json({ token, user: { id: user._id, shopName: user.shopName, ownerFullName: user.ownerFullName, phoneNumber: user.phoneNumber } });
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        shopName: user.shopName,
+        ownerFullName: user.ownerFullName,
+        phoneNumber: user.phoneNumber,
+      },
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Server Error', error: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
