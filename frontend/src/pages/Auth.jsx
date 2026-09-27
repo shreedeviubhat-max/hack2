@@ -23,7 +23,8 @@ export default function Auth() {
     setErrorMsg('');
     setLoading(true);
 
-    const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+    const apiBase = import.meta.env.VITE_API_URL || '';
+    const endpoint = isLogin ? `${apiBase}/api/auth/login` : `${apiBase}/api/auth/register`;
     const payload = isLogin
       ? { phoneNumber: formData.phoneNumber, password: formData.password }
       : formData;
