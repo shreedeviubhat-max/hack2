@@ -7,15 +7,20 @@ dotenv.config();
 
 const app = express();
 
-// Connect to MongoDB
-if (process.env.MONGODB_URI) {
-  mongoose
-    .connect(process.env.MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch((err) => console.error('MongoDB connection error:', err));
-}
+const connectToDatabase = require('./db');
+
+// Connect to MongoDB eagerly if URI is available
+connectToDatabase().catch((err) => console.error('Initial DB connection error:', err));
 
 // Middleware
+app.use(async (req, res, next) => {
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
 app.use(cors());
 app.use(express.json());
 
@@ -29,10 +34,12 @@ app.get('/api', (req, res) => {
   res.json({ status: 'ok', message: 'API is running' });
 });
 
-// Start listener for Render and local development
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Start listener for Render and local development (omit on Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
