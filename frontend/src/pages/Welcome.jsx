@@ -10,13 +10,13 @@ export default function Welcome() {
     <div className="flex flex-col items-center justify-center min-h-screen p-8 text-center bg-background">
       <h1 className="text-5xl font-bold mb-4 text-accent-light">Your Shop Assistant</h1>
       <p className="text-lg text-text-muted mb-8 max-w-2xl">
-        Manage your Customer Khaata, Supplier Ledgers, and automate your workflow with our smart tools.
+        Manage your Borrower Khaata, Supplier Ledgers, and automate your workflow with our smart tools.
       </p>
       
       <div className="flex flex-wrap justify-center gap-4 mb-12">
-        <span className="px-4 py-2 rounded-full border border-accent-dark text-accent-light bg-black">#SmartKhaata</span>
+        <span className="px-4 py-2 rounded-full border border-accent-dark text-accent-light bg-black">#BorrowerKhaata</span>
         <span className="px-4 py-2 rounded-full border border-accent-dark text-accent-light bg-black">#SupplierLedger</span>
-        <span className="px-4 py-2 rounded-full border border-accent-dark text-accent-light bg-black">#AIBillScanner</span>
+        <span className="px-4 py-2 rounded-full border border-accent-dark text-accent-light bg-black">#PaymentTracker</span>
         <span className="px-4 py-2 rounded-full border border-accent-dark text-accent-light bg-black">#ExcelExport</span>
         <span className="px-4 py-2 rounded-full border border-accent-dark text-accent-light bg-black">#SecureMERN</span>
       </div>

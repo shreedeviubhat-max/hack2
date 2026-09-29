@@ -26,8 +26,15 @@ app.use(express.json());
 
 // Routes (Mount on both paths for flexibility)
 const authRoutes = require('./routes/auth');
+const borrowerRoutes = require('./routes/borrowers');
+const supplierRoutes = require('./routes/suppliers');
+
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
+app.use('/api/borrowers', borrowerRoutes);
+app.use('/borrowers', borrowerRoutes);
+app.use('/api/suppliers', supplierRoutes);
+app.use('/suppliers', supplierRoutes);
 
 // Test route
 app.get('/api', (req, res) => {

@@ -70,12 +70,19 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-4xl flex flex-col md:flex-row bg-[#121214] rounded-xl overflow-hidden shadow-2xl border border-[#27272a]">
-        <div className="w-full md:w-1/2 bg-black flex items-center justify-center p-8 border-r border-[#27272a]">
+        <div className="w-full md:w-1/2 bg-[#09090b] flex flex-col items-center justify-center p-8 border-b md:border-b-0 md:border-r border-[#27272a]">
+          <div className="w-full max-w-[280px] sm:max-w-[320px] aspect-square rounded-2xl overflow-hidden shadow-lg border border-[#27272a] mb-6 bg-black">
+            <img 
+              src="/src/assets/shopkeeper-entry.jpg" 
+              alt="Shopkeeper managing store ledger on digital tablet" 
+              className="w-full h-full object-cover"
+            />
+          </div>
           <div className="text-center">
             <h2 className="text-2xl font-bold text-accent-light mb-2">
               {isLogin ? 'Welcome Back!' : 'Join Us Today'}
             </h2>
-            <p className="text-text-muted">Manage your khaata digitally.</p>
+            <p className="text-text-muted">Smart digital khata & ledger for modern shops.</p>
           </div>
         </div>
 

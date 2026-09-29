@@ -72,9 +72,10 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid phone number or password' });
     }
 
+    const JWT_SECRET = process.env.JWT_SECRET || 'kirana_smart_khaata_secure_jwt_secret_key_2026';
     const token = jwt.sign(
       { userId: user._id, shopName: user.shopName },
-      process.env.JWT_SECRET || 'fallback_secret',
+      JWT_SECRET,
       { expiresIn: '7d' }
     );
 

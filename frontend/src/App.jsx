@@ -8,7 +8,14 @@ import Dashboard from './pages/Dashboard';
 export const AuthContext = React.createContext();
 
 function App() {
-  const [user, setUser] = React.useState(null);
+  const [user, setUser] = React.useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
