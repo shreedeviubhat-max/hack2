@@ -1,5 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../App';
+import { API_BASE_URL } from '../config/api';
+import shopkeeperEntryImg from '../assets/shopkeeper-entry.jpg';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -23,8 +25,7 @@ export default function Auth() {
     setErrorMsg('');
     setLoading(true);
 
-    const apiBase = import.meta.env.VITE_API_URL || '';
-    const endpoint = isLogin ? `${apiBase}/api/auth/login` : `${apiBase}/api/auth/register`;
+    const endpoint = isLogin ? `${API_BASE_URL}/api/auth/login` : `${API_BASE_URL}/api/auth/register`;
     const payload = isLogin
       ? { phoneNumber: formData.phoneNumber, password: formData.password }
       : formData;
@@ -73,7 +74,7 @@ export default function Auth() {
         <div className="w-full md:w-1/2 bg-[#09090b] flex flex-col items-center justify-center p-8 border-b md:border-b-0 md:border-r border-[#27272a]">
           <div className="w-full max-w-[280px] sm:max-w-[320px] aspect-square rounded-2xl overflow-hidden shadow-lg border border-[#27272a] mb-6 bg-black">
             <img 
-              src="/src/assets/shopkeeper-entry.jpg" 
+              src={shopkeeperEntryImg} 
               alt="Shopkeeper managing store ledger on digital tablet" 
               className="w-full h-full object-cover"
             />

@@ -1,5 +1,6 @@
 import React, { useContext, useState, useEffect, useMemo } from 'react';
 import { AuthContext } from '../App';
+import { API_BASE_URL } from '../config/api';
 import { 
   LogOut, Plus, Download, UserCheck, Search, Phone, MapPin, 
   History, CheckCircle2, AlertCircle, ArrowUpRight, ArrowDownLeft, X, Building2, Calendar
@@ -39,7 +40,7 @@ export default function Dashboard() {
   const [newBorrowerForm, setNewBorrowerForm] = useState({ fullName: '', phone: '', address: '', initialBorrowed: '' });
   const [newSupplierForm, setNewSupplierForm] = useState({ companyName: '', category: '', initialInvoiceNumber: '', initialAmount: '' });
 
-  const apiBase = import.meta.env.VITE_API_URL || '';
+  const apiBase = API_BASE_URL;
 
   const getAuthHeaders = () => {
     const freshToken = localStorage.getItem('token');

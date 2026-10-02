@@ -5,7 +5,7 @@ const dns = require('dns');
 try {
   dns.setServers(['8.8.8.8', '1.1.1.1']);
 } catch (dnsErr) {
-  console.warn('Unable to set custom DNS servers:', dnsErr);
+  console.warn('Unable to set custom DNS servers:', dnsErr.message);
 }
 
 let cached = global.mongoose;
@@ -21,13 +21,23 @@ async function connectToDatabase() {
     return null;
   }
 
-  if (cached.conn) {
+  // If already connected, reuse existing connection
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+
+  if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
+  }
+
+  // If previous promise failed or connection was lost, reset promise
+  if (mongoose.connection.readyState === 0) {
+    cached.promise = null;
   }
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
+      serverSelectionTimeoutMS: 10000,
     };
 
     cached.promise = mongoose.connect(uri, opts).then((m) => {
@@ -40,7 +50,8 @@ async function connectToDatabase() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.error('MongoDB connection error:', e);
+    cached.conn = null;
+    console.error('MongoDB connection error:', e.message);
     throw e;
   }
 
